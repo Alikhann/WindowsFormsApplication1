@@ -54,7 +54,7 @@ namespace WindowsFormsApplication1
         int number1, number2;
         string[] values;
         List<Vector3d> listOfVertices = new List<Vector3d>();
-        string fileName = "C:/input.txt";
+        string fileName = "G:/test/input.txt";
         //-------------------end-----------------------
         int elementCount = 0; //count of tri element to be drawn
 
@@ -81,7 +81,7 @@ namespace WindowsFormsApplication1
 
             this.MouseWheel += new MouseEventHandler(glControl1_MouseWheelChanged);
             this.MouseMove += new MouseEventHandler(glControl1_MouseWheelChanged);
-
+            //ch
 
             GL.Enable(EnableCap.DepthTest);
             GL.Disable(EnableCap.CullFace);

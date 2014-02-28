@@ -386,25 +386,25 @@ namespace WindowsFormsApplication1
             GL.Vertex3(0.0f, 0.0f, 20.0f);
             GL.End();
 
-            //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+            
            
             
             
             //Vertex Array Buffer
             {
             //    GL.Color3(Color.Red);
-            //    GL.EnableClientState(ArrayCap.VertexArray);
-            //    GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
+                GL.EnableClientState(ArrayCap.VertexArray);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
                 
-            //    GL.VertexPointer(3, VertexPointerType.Double, 0, 0);
+                GL.VertexPointer(3, VertexPointerType.Double, 0, 0);
                 
-            //    //GL.DrawArrays(PrimitiveType.Points, 0, newvert.Length);
+                //GL.DrawArrays(PrimitiveType.Points, 0, newvert.Length);
             //}
 
             ////Element Array Buffer
             //{
             //   // GL.EnableClientState(ArrayCap.IndexArray);
-            //    GL.BindBuffer(BufferTarget.ElementArrayBuffer, i_elements);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, i_elements);
 
             //   // GL.Enable(EnableCap.Lighting);
             //    //GL.Enable(EnableCap.Light0);
@@ -417,14 +417,17 @@ namespace WindowsFormsApplication1
             //    //GL.FrontFace(FrontFaceDirection.Ccw);
             //    GL.PointSize(3f);
             //   GL.DrawElements(PrimitiveType.Points, elementCount, DrawElementsType.UnsignedInt, 0);
-            //    GL.Color3(Color.Turquoise);
-            //    GL.DrawElements(PrimitiveType.Triangles, elementCount, DrawElementsType.UnsignedInt, 0);
+                GL.Color3(Color.Turquoise);
+                GL.Begin(PrimitiveType.Points);
+                GL.Vertex3(20, 20, 20);
+                GL.End();
+                GL.DrawElements(PrimitiveType.Triangles, elementCount, DrawElementsType.UnsignedInt, 0);
                 Triangles tr = new Triangles();
-                tr.draw();
+                //tr.draw();
                 GL.Color3(Color.White);
                 GL.LineWidth(2.0f);
-                //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                //GL.DrawElements(PrimitiveType.LineStrip, elementCount, DrawElementsType.UnsignedInt, 0);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                //GL.DrawElements(PrimitiveType.Lines, elementCount, DrawElementsType.UnsignedInt, 0);
             }
 
             GL.DisableClientState(ArrayCap.VertexArray);

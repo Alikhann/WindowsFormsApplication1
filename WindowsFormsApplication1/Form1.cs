@@ -521,7 +521,7 @@ namespace WindowsFormsApplication1
             m[8] = right.Z; m[9] = up.Z; m[10] = -forward.Z; m[11] = 0;
             // set translation vector
             m[12] = 0; m[13] = 0; m[14] = 0; m[15] = 1;
-            */
+            *///sdsd
             m = Matrix4.Identity;
             m.M11 = right.X;
             m.M21 = right.Y;

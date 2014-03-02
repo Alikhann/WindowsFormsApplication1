@@ -71,7 +71,10 @@ namespace WindowsFormsApplication1
         {
             InitializeComponent();
         }
-
+        public static Vector3 ToVector3(Vector3d input)
+        {
+            return new Vector3((float)input.X, (float)input.Y, (float)input.Z);
+        }
         private void glControl1_Load(object sender, EventArgs e)
         {
             loaded = true;
@@ -84,7 +87,7 @@ namespace WindowsFormsApplication1
             //ch
 
             GL.Enable(EnableCap.DepthTest);
-            GL.Disable(EnableCap.CullFace);
+            //GL.Disable(EnableCap.CullFace);
             GL.Enable(EnableCap.Lighting);
             GL.Enable(EnableCap.Light0);
             GL.Enable(EnableCap.ColorMaterial);
@@ -155,10 +158,25 @@ namespace WindowsFormsApplication1
 
             Console.WriteLine(number1 + " " + number2);
             Console.WriteLine(index.Length);
-            foreach (var v in index)
-                Console.Write(v + "\t");
+            //foreach (var v in index)
+            //    Console.Write(v + "\t");
 
-            
+            for (int i = 0; i < index.Length; i += 3)
+            {
+                Vector3 v0 = ToVector3(newvert[index[i]]);
+                Vector3 v1 = ToVector3(newvert[index[i + 1]]);
+                Vector3 v2 = ToVector3(newvert[index[i + 2]]);
+
+                Vector3 normal = Vector3.Normalize(Vector3.Cross(v2 - v0, v1 - v0));
+                //normals[index[i]] += normal;
+                //normals[index[i + 1]] += normal;
+                //normals[index[i + 2]] += normal;
+                Console.WriteLine(normal);
+            }
+            for (int i = 0; i < newvert.Length; i++)
+            {
+                //normals[i] = Vector3.Normalize(normals[i]);
+            }
             
             GL.ClearColor(Color.Black);
             GL.PointSize(5f);
@@ -311,7 +329,7 @@ namespace WindowsFormsApplication1
             {
                 GL.GenBuffers(1, out v_position);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
-                GL.BufferData<Vector3d>(BufferTarget.ArrayBuffer, (IntPtr)(newvert.Length * Vector3d.SizeInBytes), newvert, BufferUsageHint.StaticDraw);
+                GL.BufferData<Vector3d>(BufferTarget.ArrayBuffer, (IntPtr)(newvert.Length * Vector3d.SizeInBytes), newvert, BufferUsageHint.DynamicDraw);
                 GL.GetBufferParameter(BufferTarget.ArrayBuffer, BufferParameterName.BufferSize, out bufferSize);
                 if (newvert.Length * Vector3d.SizeInBytes != bufferSize)
                     Console.WriteLine("Vertex array is not uploaded correctly!");
@@ -321,23 +339,23 @@ namespace WindowsFormsApplication1
             }
 
             //----------------Normal Array Buffer--------------------- 
-            //if(normals != null)
-            //{
-            //    GL.GenBuffers(1, out norm);
-            //    GL.BindBuffer(BufferTarget.ArrayBuffer, norm);
-            //    GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(normals.Length * Vector3.SizeInBytes), normals, BufferUsageHint.StaticDraw);
-            //    GL.GetBufferParameter(BufferTarget.ArrayBuffer, BufferParameterName.BufferSize, out bufferSize);
-            //    if (normals.Length * Vector3.SizeInBytes != bufferSize)
-            //        Console.WriteLine("Normal array not uploaded correctly!");
+            if(normals != null)
+            {
+                GL.GenBuffers(1, out norm);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, norm);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(normals.Length * Vector3.SizeInBytes), normals, BufferUsageHint.StaticDraw);
+                GL.GetBufferParameter(BufferTarget.ArrayBuffer, BufferParameterName.BufferSize, out bufferSize);
+                if (normals.Length * Vector3.SizeInBytes != bufferSize)
+                    Console.WriteLine("Normal array not uploaded correctly!");
 
             //    //clear the buffer Binding
-            //    GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-            //}
+                GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+            }
             //----------------Element Array Buffer---------------------
             {   
                 GL.GenBuffers(1, out i_elements);
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, i_elements);
-                GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(index.Length * sizeof(uint)), index, BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(index.Length * sizeof(uint)), index, BufferUsageHint.DynamicDraw);
                 GL.GetBufferParameter(BufferTarget.ElementArrayBuffer, BufferParameterName.BufferSize, out bufferSize);
                 if (index.Length * sizeof(uint) != bufferSize)
                     Console.WriteLine("Element array is not uploaded correctly!");
@@ -350,12 +368,7 @@ namespace WindowsFormsApplication1
             elementCount = index.Length;
 
         }
-        
-
-        
-        void Draw()
-        {
-        }
+       
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
             if (!loaded)
@@ -385,19 +398,16 @@ namespace WindowsFormsApplication1
             GL.Vertex3(0.0f, 0.0f, 0.0f);
             GL.Vertex3(0.0f, 0.0f, 20.0f);
             GL.End();
-
-            
-           
-            
-            
+            GL.Begin(PrimitiveType.Points);
+            GL.Vertex3(15, 15, 15);
+            GL.End();
             //Vertex Array Buffer
             {
-            //    GL.Color3(Color.Red);
+                GL.Color3(Color.Red);
                 GL.EnableClientState(ArrayCap.VertexArray);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
                 
                 GL.VertexPointer(3, VertexPointerType.Double, 0, 0);
-                
                 //GL.DrawArrays(PrimitiveType.Points, 0, newvert.Length);
             //}
 
@@ -406,28 +416,32 @@ namespace WindowsFormsApplication1
             //   // GL.EnableClientState(ArrayCap.IndexArray);
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, i_elements);
 
-            //   // GL.Enable(EnableCap.Lighting);
-            //    //GL.Enable(EnableCap.Light0);
-            //    //GL.LightModel(LightModelParameter.LightModelTwoSide, 0);
+                GL.Enable(EnableCap.Lighting);
+                GL.Enable(EnableCap.Light0);
 
-            //    //GL.BindBuffer(BufferTarget.ArrayBuffer, norm);
-            //    //GL.NormalPointer(NormalPointerType.Float, Vector3.SizeInBytes, 0);
-            //    //GL.EnableClientState(ArrayCap.NormalArray);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, norm);
+            GL.NormalPointer(NormalPointerType.Float, Vector3.SizeInBytes, 0);
+            GL.EnableClientState(ArrayCap.NormalArray);
                 
-            //    //GL.FrontFace(FrontFaceDirection.Ccw);
+               
             //    GL.PointSize(3f);
             //   GL.DrawElements(PrimitiveType.Points, elementCount, DrawElementsType.UnsignedInt, 0);
                 GL.Color3(Color.Turquoise);
-                GL.Begin(PrimitiveType.Points);
-                GL.Vertex3(20, 20, 20);
-                GL.End();
-                GL.DrawElements(PrimitiveType.Triangles, elementCount, DrawElementsType.UnsignedInt, 0);
+                GL.Light(LightName.Light0, LightParameter.Diffuse, 0.5f);
+                GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
+                //GL.Enable(EnableCap.Normalize);
                 Triangles tr = new Triangles();
-                //tr.draw();
-                GL.Color3(Color.White);
+                tr.draw();
+                
+                //GL.DrawElements(PrimitiveType.Triangles, elementCount, DrawElementsType.UnsignedInt, 0);
+                
+                /*
                 GL.LineWidth(2.0f);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                //GL.DrawElements(PrimitiveType.Lines, elementCount, DrawElementsType.UnsignedInt, 0);
+                GL.Color3(Color.White);
+                GL.FrontFace(FrontFaceDirection.Cw);
+                GL.DrawElements(PrimitiveType.LineLoop, elementCount, DrawElementsType.UnsignedInt, 0);
+                */
+               
             }
 
             GL.DisableClientState(ArrayCap.VertexArray);
@@ -541,7 +555,7 @@ namespace WindowsFormsApplication1
         void ResetCamera()
         {
             g_targetPos[0] = 0;
-            g_targetPos[1] =10;
+            g_targetPos[1] = 10;
             g_targetPos[2] = 10;
 
             g_cameraPos[0] = g_targetPos[0];

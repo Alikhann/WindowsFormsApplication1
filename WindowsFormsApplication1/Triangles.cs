@@ -22,6 +22,7 @@ namespace WindowsFormsApplication1
         Vector3[] vertices;
         uint[] indices;
         Vector3[] normals;
+        Dictionary<Point, Vector3> normalsPerPoint = new Dictionary<Point, Vector3>();
 
         public Triangles() 
         {
@@ -44,20 +45,23 @@ namespace WindowsFormsApplication1
 
             for (int i = 0; i < indices.Length; i += 3)
             {
-                Vector3 v0 = vertices[indices[i]];
+                Vector3 v0 = vertices[indices[i + 0]];
                 Vector3 v1 = vertices[indices[i + 1]];
                 Vector3 v2 = vertices[indices[i + 2]];
 
                 Vector3 normal = Vector3.Normalize(Vector3.Cross(v2 - v0, v1 - v0));
-                normals[indices[i]] += normal;
+
+                normals[indices[i + 0]] += normal;
                 normals[indices[i + 1]] += normal;
                 normals[indices[i + 2]] += normal;
 
             }
             for (int i = 0; i < vertices.Length; i ++)
             {
-                normals[i] = Vector3.Normalize(normals[i]) * (-2);
+                normals[i] = Vector3.Normalize(normals[i]) * (-1);
             }
+            
+          
 
             GL.GenBuffers(1, out vertexID);
             GL.BindBuffer(BufferTarget.ArrayBuffer, vertexID);
@@ -72,7 +76,28 @@ namespace WindowsFormsApplication1
             GL.BufferData(BufferTarget.ArrayBuffer, new IntPtr(normals.Length * Vector3.SizeInBytes), normals, BufferUsageHint.StaticDraw);
 
         }
-      
+
+        public Vector3[] Normal
+        {
+            get
+            {
+                for(int i = 0; i < indices.Length; i += 3)
+                {
+                    Vector3 v0 = vertices[indices[i + 0]];
+                    Vector3 v1 = vertices[indices[i + 1]];
+                    Vector3 v2 = vertices[indices[i + 2]];
+
+                    Vector3 normal = Vector3.Normalize(Vector3.Cross(v2 - v0, v1 - v0));
+
+                    normals[indices[i + 0]] += normal;
+                    normals[indices[i + 1]] += normal;
+                    normals[indices[i + 2]] += normal;
+                }
+                    
+                    return normals;
+            }
+        }
+        
         public void draw()
         {
             //GL.Begin(PrimitiveType.Triangles);
@@ -101,15 +126,8 @@ namespace WindowsFormsApplication1
 
            
          }
-       
-        //public Vector3 Normal
-        //{
-        //    get
-        //    {
-        //        var dir = Vector3.Cross(b-a, c-a);
-                
-        //        return dir;
-        //    }
-        //}
+
+
+
     }
 }

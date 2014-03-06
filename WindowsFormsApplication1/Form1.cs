@@ -11,7 +11,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 namespace WindowsFormsApplication1
 {
-    public partial class Form1 : Form
+    public partial class AliGL : Form
     {
         bool loaded = false;
         //float x = -1.0f, y = -1.0f, z = 1.0f;
@@ -67,7 +67,7 @@ namespace WindowsFormsApplication1
 
 
         int cnt = 0;
-        public Form1()
+        public AliGL()
         {
             InitializeComponent();
         }
@@ -107,6 +107,7 @@ namespace WindowsFormsApplication1
 
             number1 = Convert.ToInt32(File.ReadAllLines(@fileName).First());
             number2 = Convert.ToInt32(File.ReadAllLines(@fileName).Skip(number1 + 1).Take(1).First());
+            
             String[] lines = File.ReadAllLines(@fileName);
            
             

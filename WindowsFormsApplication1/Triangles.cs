@@ -58,7 +58,8 @@ namespace WindowsFormsApplication1
             }
             for (int i = 0; i < vertices.Length; i ++)
             {
-                normals[i] = Vector3.Normalize(normals[i]) * (-1);
+                normals[i] = Vector3.Normalize(normals[i])*-1;
+                Console.WriteLine(normals[i]);
             }
             
           

@@ -9,17 +9,13 @@ using System.Globalization;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+
 namespace WindowsFormsApplication1
 {
     public partial class AliGL : Form
     {
         bool loaded = false;
-        //float x = -1.0f, y = -1.0f, z = 1.0f;
-
-        
-
-        string[] str;
-        int xx = 0, yy = 0, zz = 0;
+        int cnt = 0;
 
         static float CAMERA_FOVY = 45.0f;
         static float CAMERA_ZFAR = 1000.0f;
@@ -42,19 +38,19 @@ namespace WindowsFormsApplication1
         float dx = 0.0f;
         float dy = 0.0f;
 
-        Vector3[] verticess;
+        Vector3d[] vertices;
+        uint[] indices;
         Vector3[] normals;
-        uint[] indicess;
-
-
+        Vector3[] vertexnormals;
+        Dictionary<Vector3, Vector3> perPoint = new Dictionary<Vector3, Vector3>();
+ 
         //---------------for reading file---------------
-        Vector3d[] newvert;
-        uint[] index;
+        
         List<uint> list = new List<uint>();
         int number1, number2;
         string[] values;
         List<Vector3d> listOfVertices = new List<Vector3d>();
-        string fileName = "G:/test/input.txt";
+        string fileName = "C:/input.txt";
         //-------------------end-----------------------
         int elementCount = 0; //count of tri element to be drawn
 
@@ -63,10 +59,9 @@ namespace WindowsFormsApplication1
         int i_elements;
         int norm;
         int bufferSize;
-        int size;
 
+        float a;
 
-        int cnt = 0;
         public AliGL()
         {
             InitializeComponent();
@@ -79,268 +74,111 @@ namespace WindowsFormsApplication1
         {
             loaded = true;
 
-            glControl1.Dock = DockStyle.Fill;
             ResetCamera();
 
-            this.MouseWheel += new MouseEventHandler(glControl1_MouseWheelChanged);
-            this.MouseMove += new MouseEventHandler(glControl1_MouseWheelChanged);
-            //ch
-
             GL.Enable(EnableCap.DepthTest);
-            //GL.Disable(EnableCap.CullFace);
             GL.Enable(EnableCap.Lighting);
             GL.Enable(EnableCap.Light0);
             GL.Enable(EnableCap.ColorMaterial);
-            /*
-            using (StreamReader read = new StreamReader(@"G:\test\input.txt"))
-            {
-                string line;
-                while ((line = read.ReadLine()) != null)
-                {
-                str = line.Split(' ');
-                }
-                //xx = Convert.ToInt32(str[0]);
-                //yy = Convert.ToInt32(str[1]);
-               // zz = Convert.ToInt32(str[2]);
-            }
-            */
 
             number1 = Convert.ToInt32(File.ReadAllLines(@fileName).First());
             number2 = Convert.ToInt32(File.ReadAllLines(@fileName).Skip(number1 + 1).Take(1).First());
-            
             String[] lines = File.ReadAllLines(@fileName);
-           
-            
+
             CultureInfo ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
             ci.NumberFormat.CurrencyDecimalSeparator = ".";
-            
-            for(int i = 1; i <= number1; i++)
+
+            for (int i = 1; i <= number1; i++)
             {
                 values = lines[i].Split(' ');
                 var x = float.Parse(values[0], NumberStyles.Any, ci);
                 var y = float.Parse(values[1], NumberStyles.Any, ci);
-                var z = float.Parse(values[2], NumberStyles.Any, ci)*500;
+                var z = float.Parse(values[2], NumberStyles.Any, ci);
 
                 listOfVertices.Add(new Vector3d(x, y, z));
             }
-            for(int i = number1 + 2; i<lines.Length; i++)
+            for (int i = number1 + 2; i < lines.Length; i++)
             {
                 values = lines[i].Split(' ');
                 list.Add(uint.Parse(values[0]));
                 list.Add(uint.Parse(values[1]));
                 list.Add(uint.Parse(values[2]));
             }
-            /*
-            for (int i = 1; i < lines.Length; i++)
+            vertices = listOfVertices.ToArray();
+            indices = list.ToArray();
+            normals = new Vector3[vertices.Length];
+            Console.WriteLine(vertices.Length + " " + indices.Length + " " + normals.Length);
+            vertexnormals = new Vector3[vertices.Length];
+            foreach (var vert in vertices)
+                Console.WriteLine(vert);
+            for (int i = 0; i < vertices.Length; i++)
             {
-                //if (i == 0) continue; 
-                if (i <= number1)
-                {
-                    values = lines[i].Split(' ');
-                    
-                    x = float.Parse(values[0], NumberStyles.Any, ci);
-                    y = float.Parse(values[1], NumberStyles.Any, ci);
-                    z = float.Parse(values[2], NumberStyles.Any, ci);
-
-                    listOfVertices.Add(new Vector3d(x, y, z));
-                    //newvert[i] = new Vector3d(x, y, z);
-                }
-                else if (i >= number1 + 2)
-                {
-                    values = lines[i].Split(' ');
-                    list.Add(uint.Parse(values[0]));
-                    list.Add(uint.Parse(values[1]));
-                    list.Add(uint.Parse(values[2]));
-                }
-            }*/
-            newvert = listOfVertices.ToArray();
-            index = list.ToArray();
-
-
-            Console.WriteLine(number1 + " " + number2);
-            Console.WriteLine(index.Length);
-            //foreach (var v in index)
-            //    Console.Write(v + "\t");
-
-            for (int i = 0; i < index.Length; i += 3)
-            {
-                Vector3 v0 = ToVector3(newvert[index[i]]);
-                Vector3 v1 = ToVector3(newvert[index[i + 1]]);
-                Vector3 v2 = ToVector3(newvert[index[i + 2]]);
-
-                Vector3 normal = Vector3.Normalize(Vector3.Cross(v2 - v0, v1 - v0));
-                //normals[index[i]] += normal;
-                //normals[index[i + 1]] += normal;
-                //normals[index[i + 2]] += normal;
-                Console.WriteLine(normal);
+                normals[i] = new Vector3(0,0,0);
+                //Console.WriteLine(normals[i]);
             }
-            for (int i = 0; i < newvert.Length; i++)
+            Console.WriteLine(indices[0]);
+            Console.WriteLine(vertices[indices[0]]);
+            for (int i = 0; i < indices.Length; i += 3)
             {
-                //normals[i] = Vector3.Normalize(normals[i]);
+               // Console.WriteLine(indices[i] + " " + indices[i + 1] + " " + indices[i + 2]);
+                
+                Vector3 v0 = normals[indices[i]];
+                Vector3 v1 = normals[indices[i + 1]];
+                Vector3 v2 = normals[indices[i + 2]];
+                Vector3 normal = Vector3.Normalize(Vector3.Cross(v1 - v0, v2 - v0));
+                normals[indices[i]] = normals[indices[i + 1]] = normals[indices[i + 2]] = normal;
             }
-            
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                normals[i] = Vector3.Normalize(normals[i]);
+                
+                vertexnormals[i] = new Vector3(0, 0, 0);
+            }
+            for (int i = 0; i < indices.Length; i += 3)
+            {
+                //vertexnormals[i] = Vector3.Normalize(vertexnormals[i] + normals[i]);
+                //vertexnormals[i + 1] = Vector3.Normalize(vertexnormals[i + 1] + normals[i + 1]);
+                //vertexnormals[i + 2] = Vector3.Normalize(vertexnormals[i + 2] + normals[i + 2]);
+             /*   Vector3 n = normals[indices[i]];
+
+                if (!perPoint.ContainsKey(normals[indices[i]]))
+                    perPoint.Add(normals[indices[i]], n);
+                else
+                    perPoint[normals[indices[i]]] = perPoint[normals[indices[i]]] + n;
+                if (!perPoint.ContainsKey(normals[indices[i + 1]]))
+                    perPoint.Add(normals[indices[i + 1]], n);
+                else
+                    perPoint[normals[indices[i + 1]]] = perPoint[normals[indices[i + 1]]] + n;
+                if (!perPoint.ContainsKey(normals[indices[i + 2]]))
+                    perPoint.Add(normals[indices[i + 2]], n);
+                else
+                    perPoint[normals[indices[i + 2]]] = perPoint[normals[indices[i + 2]]] + n;
+              */ 
+            }
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                normals[i] = Vector3.Normalize(normals[i]);
+                //Console.WriteLine(normals[i]);
+            }
+
             GL.ClearColor(Color.Black);
             GL.PointSize(5f);
-            
-            #region------Vertices and Normals----------
-            verticess = new Vector3[]
-            {
-                // Front face
-				new Vector3 (-1.0f, -1.0f, 1.0f), 
-				new Vector3 (1.0f, -1.0f, 1.0f), 
-				new Vector3 (1.0f, 1.0f, 1.0f), 
-				new Vector3 (-1.0f, 1.0f, 1.0f),
-				// Right face
-				new Vector3 (1.0f, -1.0f, 1.0f), 
-				new Vector3 (1.0f, -1.0f, -1.0f), 
-				new Vector3 (1.0f, 1.0f, -1.0f), 
-				new Vector3 (1.0f, 1.0f, 1.0f),
-				// Back face
-				new Vector3 (1.0f, -1.0f, -1.0f), 
-				new Vector3 (-1.0f, -1.0f, -1.0f), 
-				new Vector3 (-1.0f, 1.0f, -1.0f), 
-				new Vector3 (1.0f, 1.0f, -1.0f),
-				// Left face
-				new Vector3 (-1.0f, -1.0f, -1.0f), 
-				new Vector3 (-1.0f, -1.0f, 1.0f), 
-				new Vector3 (-1.0f, 1.0f, 1.0f), 
-				new Vector3 (-1.0f, 1.0f, -1.0f),
-				// Top Face	
-				new Vector3 (-1.0f, 1.0f, 1.0f), 
-				new Vector3 (1.0f, 1.0f, 1.0f),
-				new Vector3 (1.0f, 1.0f, -1.0f), 
-				new Vector3 (-1.0f, 1.0f, -1.0f),
-				// Bottom Face
-				new Vector3 (1.0f, -1.0f, 1.0f), 
-				new Vector3 (-1.0f, -1.0f, 1.0f),
-				new Vector3 (-1.0f, -1.0f, -1.0f), 
-				new Vector3 (1.0f, -1.0f, -1.0f),
-            };
-
-            normals = new Vector3[]
-            {
-                // Front face
-				new Vector3 ( 0f, 0f, 1f), 
-				new Vector3 ( 0f, 0f, 1f),
-				new Vector3 ( 0f, 0f, 1f),
-				new Vector3 ( 0f, 0f, 1f), 
-				// Right face
-				new Vector3 ( 1f, 0f, 0f), 
-				new Vector3 ( 1f, 0f, 0f), 
-				new Vector3 ( 1f, 0f, 0f), 
-				new Vector3 ( 1f, 0f, 0f),
-				// Back face
-				new Vector3 ( 0f, 0f, -1f), 
-				new Vector3 ( 0f, 0f, -1f), 
-				new Vector3 ( 0f, 0f, -1f),  
-				new Vector3 ( 0f, 0f, -1f), 
-				// Left face
-				new Vector3 ( -1f, 0f, 0f),  
-				new Vector3 ( -1f, 0f, 0f), 
-				new Vector3 ( -1f, 0f, 0f),  
-				new Vector3 ( -1f, 0f, 0f),
-				// Top Face	
-				new Vector3 ( 0f, 1f, 0f),  
-				new Vector3 ( 0f, 1f, 0f), 
-				new Vector3 ( 0f, 1f, 0f),  
-				new Vector3 ( 0f, 1f, 0f),
-				// Bottom Face
-				new Vector3 ( 0f, -1f, 0f),  
-				new Vector3 ( 0f, -1f, 0f), 
-				new Vector3 ( 0f, -1f, 0f),  
-				new Vector3 ( 0f, -1f, 0f)
-            };
-
-            indicess = new uint[]
-            {
-                /*
-                // Font face
-				0, 1, 2, 2, 3, 0, 
-				// Right face
-				7, 6, 5, 5, 4, 7, 
-				// Back face
-				11, 10, 9, 9, 8, 11, 
-				// Left face
-				15, 14, 13, 13, 12, 15, 
-				// Top Face	
-				19, 18, 17, 17, 16, 19,
-				// Bottom Face
-				23, 22, 21, 21, 20, 23
-              */
-             0, 1, 2, 3, 
-             4, 5, 6, 7, 
-             8, 9, 10, 11, 
-             12, 13, 14, 15, 
-             16, 17, 18, 19, 
-             20, 21, 22, 23
-              
-            };
-
-            #endregion
-
-            #region temp
-            /*
-            size = xx * yy * zz * 24;
-            newvert = new Vector3[size];
-
-            
-            for (int i = 0; i < zz; i++)
-            {
-                for (int j = 0; j < yy; j++)
-                {
-                    for (int k = 0; k < xx; k++)
-                    {
-                        for (int l = 0; l < vertices.Length; l++)
-                        {
-                            vertices[l].X += x;
-                            vertices[l].Y += y;
-                            vertices[l].Z += z;
-                        }
-
-                            x++;
-                    }
-                    y++;
-                    x = -1.0f;
-                }
-                z--;
-                y = -1.0f;
-            }
-            /*
-            Parallel.For(0, newvert.Length, i =>
-                {
-                    Console.WriteLine("Go: {0}", i);
-                });*/
-
-            //-------if I declare second Vector3[] for new vertices...
-            //so, let's imagine, how it should look like
-            //
-
-
-            /*
-            for (int i = 0; i < newvert.Length; i += 24)
-                for (int j = 0; j < vertices.Length; j++ )
-                { 
-                    //some math logic for generating other vertices
-                    newvert.Concat(vertices);
-                }
-            */
-            #endregion
 
             //----------------Vertex Array Buffer---------------------
             {
                 GL.GenBuffers(1, out v_position);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
-                GL.BufferData<Vector3d>(BufferTarget.ArrayBuffer, (IntPtr)(newvert.Length * Vector3d.SizeInBytes), newvert, BufferUsageHint.DynamicDraw);
+                GL.BufferData<Vector3d>(BufferTarget.ArrayBuffer, (IntPtr)(vertices.Length * Vector3d.SizeInBytes), vertices, BufferUsageHint.DynamicDraw);
                 GL.GetBufferParameter(BufferTarget.ArrayBuffer, BufferParameterName.BufferSize, out bufferSize);
-                if (newvert.Length * Vector3d.SizeInBytes != bufferSize)
+                if (vertices.Length * Vector3d.SizeInBytes != bufferSize)
                     Console.WriteLine("Vertex array is not uploaded correctly!");
 
                 //clear the buffer Binding
                 GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             }
-
+            
             //----------------Normal Array Buffer--------------------- 
-            if(normals != null)
+            if (normals != null)
             {
                 GL.GenBuffers(1, out norm);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, norm);
@@ -349,16 +187,16 @@ namespace WindowsFormsApplication1
                 if (normals.Length * Vector3.SizeInBytes != bufferSize)
                     Console.WriteLine("Normal array not uploaded correctly!");
 
-            //    //clear the buffer Binding
+                //    //clear the buffer Binding
                 GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             }
-            //----------------Element Array Buffer---------------------
-            {   
+            //---------------Element Array Buffer---------------------
+            {
                 GL.GenBuffers(1, out i_elements);
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, i_elements);
-                GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(index.Length * sizeof(uint)), index, BufferUsageHint.DynamicDraw);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(indices.Length * sizeof(uint)), indices, BufferUsageHint.DynamicDraw);
                 GL.GetBufferParameter(BufferTarget.ElementArrayBuffer, BufferParameterName.BufferSize, out bufferSize);
-                if (index.Length * sizeof(uint) != bufferSize)
+                if (indices.Length * sizeof(uint) != bufferSize)
                     Console.WriteLine("Element array is not uploaded correctly!");
 
                 //clear the buffer Binding
@@ -366,10 +204,10 @@ namespace WindowsFormsApplication1
 
             }
 
-            elementCount = index.Length;
+            elementCount = indices.Length;
 
         }
-       
+
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
             if (!loaded)
@@ -383,72 +221,51 @@ namespace WindowsFormsApplication1
             GL.Rotate(g_pitch, 1.0f, 0.0f, 0.0f);
             GL.Rotate(g_heading, 0.0f, 1.0f, 0.0f);
 
-            GL.Disable(EnableCap.Lighting);
-            GL.Color3(Color.Red);
-            GL.Begin(PrimitiveType.Lines);
-            GL.Vertex3(0.0f, 0.0f, 0.0f);
-            GL.Vertex3(20.0f, 0.0f, 0.0f);
-            GL.End();
-            GL.Color3(Color.Green);
-            GL.Begin(PrimitiveType.Lines);
-            GL.Vertex3(0.0f, 0.0f, 0.0f);
-            GL.Vertex3(0.0f, 20.0f, 0.0f);
-            GL.End();
-            GL.Color3(Color.Blue);
-            GL.Begin(PrimitiveType.Lines);
-            GL.Vertex3(0.0f, 0.0f, 0.0f);
-            GL.Vertex3(0.0f, 0.0f, 20.0f);
-            GL.End();
-            GL.Begin(PrimitiveType.Points);
-            GL.Vertex3(15, 15, 15);
-            GL.End();
-            //Vertex Array Buffer
+            drawAxes();
+            GL.Disable(EnableCap.CullFace);
+            GL.CullFace(CullFaceMode.FrontAndBack);
+            GL.Color3(Color.Purple);
+            GL.Enable(EnableCap.Lighting);
+            GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
+            //Triangles tr = new Triangles();
+            //tr.draw();
+            draw();
+            glControl1.SwapBuffers();
+        }
+        private void draw()
+        {
+            GL.Enable(EnableCap.Lighting);
+            GL.Light(LightName.Light0, LightParameter.Diffuse, 1);
+            GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
+            //-------------vertex array buffer-----------------  
             {
                 GL.Color3(Color.Red);
                 GL.EnableClientState(ArrayCap.VertexArray);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
-                
                 GL.VertexPointer(3, VertexPointerType.Double, 0, 0);
-                //GL.DrawArrays(PrimitiveType.Points, 0, newvert.Length);
-            //}
 
-            ////Element Array Buffer
-            //{
-            //   // GL.EnableClientState(ArrayCap.IndexArray);
+                GL.DrawArrays(PrimitiveType.Points, 0, vertices.Length);
+            }
+            //------------Element Array Buffer-----------------
+            {
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, i_elements);
-
-                GL.Enable(EnableCap.Lighting);
-                GL.Enable(EnableCap.Light0);
-
-            GL.BindBuffer(BufferTarget.ArrayBuffer, norm);
-            GL.NormalPointer(NormalPointerType.Float, Vector3.SizeInBytes, 0);
-            GL.EnableClientState(ArrayCap.NormalArray);
-                
-               
-            //    GL.PointSize(3f);
-            //   GL.DrawElements(PrimitiveType.Points, elementCount, DrawElementsType.UnsignedInt, 0);
                 GL.Color3(Color.Turquoise);
-                GL.Light(LightName.Light0, LightParameter.Diffuse, 0.5f);
-                GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
-                //GL.Enable(EnableCap.Normalize);
-                Triangles tr = new Triangles();
-                tr.draw();
-                
-                //GL.DrawElements(PrimitiveType.Triangles, elementCount, DrawElementsType.UnsignedInt, 0);
-                
-                /*
-                GL.LineWidth(2.0f);
+                GL.DrawElements(PrimitiveType.Triangles, elementCount, DrawElementsType.UnsignedInt, 0);
+
                 GL.Color3(Color.White);
-                GL.FrontFace(FrontFaceDirection.Cw);
-                GL.DrawElements(PrimitiveType.LineLoop, elementCount, DrawElementsType.UnsignedInt, 0);
-                */
-               
+                GL.LineWidth(3f);
+            }
+            //------------Normal Array Buffer------------------
+            {
+                
+                GL.EnableClientState(ArrayCap.NormalArray);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, norm);
+                GL.NormalPointer(NormalPointerType.Float, Vector3.SizeInBytes, 0);
+                  
             }
 
             GL.DisableClientState(ArrayCap.VertexArray);
-           // GL.DisableClientState(ArrayCap.NormalArray);
-               
-            glControl1.SwapBuffers();
+            GL.DisableClientState(ArrayCap.NormalArray);
         }
         private void glControl1_Resize(object sender, EventArgs e)
         {
@@ -679,6 +496,29 @@ namespace WindowsFormsApplication1
         private void glControl1_MouseWheelChanged(Object sender, MouseEventArgs e)
         {
         }
-                      
+        private void drawAxes()
+        {
+
+            GL.Disable(EnableCap.Lighting);
+            GL.Color3(Color.Red);
+            GL.Begin(PrimitiveType.Lines);
+            GL.Vertex3(0.0f, 0.0f, 0.0f);
+            GL.Vertex3(20.0f, 0.0f, 0.0f);
+            GL.End();
+            GL.Color3(Color.Green);
+            GL.Begin(PrimitiveType.Lines);
+            GL.Vertex3(0.0f, 0.0f, 0.0f);
+            GL.Vertex3(0.0f, 20.0f, 0.0f);
+            GL.End();
+            GL.Color3(Color.Blue);
+            GL.Begin(PrimitiveType.Lines);
+            GL.Vertex3(0.0f, 0.0f, 0.0f);
+            GL.Vertex3(0.0f, 0.0f, 20.0f);
+            GL.End();
+            GL.Begin(PrimitiveType.Points);
+            GL.Vertex3(15, 15, 15);
+            GL.End();
+
+            }
+        }              
     }
-}

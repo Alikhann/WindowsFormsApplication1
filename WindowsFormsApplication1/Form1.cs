@@ -90,12 +90,13 @@ namespace WindowsFormsApplication1
 
             for (int i = 1; i <= number1; i++)
             {
+                double x, y, z;
                 values = lines[i].Split(' ');
-                var x = float.Parse(values[0], NumberStyles.Any, ci);
-                var y = float.Parse(values[1], NumberStyles.Any, ci);
-                var z = float.Parse(values[2], NumberStyles.Any, ci);
-
-                listOfVertices.Add(new Vector3d(x, y, z));
+                double.TryParse(values[0], NumberStyles.Any, ci, out x);
+                double.TryParse(values[1], NumberStyles.Any, ci, out y);
+                double.TryParse(values[2], NumberStyles.Any, ci, out z); ;
+                Console.WriteLine(x);
+                listOfVertices.Add(new Vector3d(x, y, z*500));
             }
             for (int i = number1 + 2; i < lines.Length; i++)
             {
@@ -107,6 +108,7 @@ namespace WindowsFormsApplication1
             vertices = listOfVertices.ToArray();
             indices = list.ToArray();
             normals = new Vector3[vertices.Length];
+
             Console.WriteLine(vertices.Length + " " + indices.Length + " " + normals.Length);
             vertexnormals = new Vector3[vertices.Length];
             foreach (var vert in vertices)
@@ -222,11 +224,8 @@ namespace WindowsFormsApplication1
             GL.Rotate(g_heading, 0.0f, 1.0f, 0.0f);
 
             drawAxes();
-            GL.Disable(EnableCap.CullFace);
-            GL.CullFace(CullFaceMode.FrontAndBack);
             GL.Color3(Color.Purple);
-            GL.Enable(EnableCap.Lighting);
-            GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
+           
             //Triangles tr = new Triangles();
             //tr.draw();
             draw();
@@ -234,28 +233,34 @@ namespace WindowsFormsApplication1
         }
         private void draw()
         {
-            GL.Enable(EnableCap.Lighting);
-            GL.Light(LightName.Light0, LightParameter.Diffuse, 1);
-            GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
+            
             //-------------vertex array buffer-----------------  
             {
                 GL.Color3(Color.Red);
                 GL.EnableClientState(ArrayCap.VertexArray);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
                 GL.VertexPointer(3, VertexPointerType.Double, 0, 0);
-
+                GL.PointSize(7f);
                 GL.DrawArrays(PrimitiveType.Points, 0, vertices.Length);
             }
+
             //------------Element Array Buffer-----------------
+
             {
+                GL.Color3(Color.White);
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, i_elements);
+                GL.DrawElements(PrimitiveType.LineStrip, elementCount, DrawElementsType.UnsignedInt, 0);
+                GL.LineWidth(3f);
+                GL.Enable(EnableCap.Lighting);
+                GL.Enable(EnableCap.Light0);
+                GL.Light(LightName.Light0, LightParameter.Ambient, 1);
+                GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
                 GL.Color3(Color.Turquoise);
                 GL.DrawElements(PrimitiveType.Triangles, elementCount, DrawElementsType.UnsignedInt, 0);
-
-                GL.Color3(Color.White);
-                GL.LineWidth(3f);
             }
+
             //------------Normal Array Buffer------------------
+            
             {
                 
                 GL.EnableClientState(ArrayCap.NormalArray);

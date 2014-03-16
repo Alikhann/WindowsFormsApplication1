@@ -22,8 +22,10 @@ namespace WindowsFormsApplication1
         Vector3[] vertices;
         uint[] indices;
         Vector3[] normals;
-        Dictionary<Point, Vector3> normalsPerPoint = new Dictionary<Point, Vector3>();
+        Vector3[] vertexnormals;
 
+        Dictionary<Point, Vector3> normalsPerPoint = new Dictionary<Point, Vector3>();
+        
         public Triangles() 
         {
             vertices = new Vector3[]
@@ -49,20 +51,39 @@ namespace WindowsFormsApplication1
                 Vector3 v1 = vertices[indices[i + 1]];
                 Vector3 v2 = vertices[indices[i + 2]];
 
-                Vector3 normal = Vector3.Normalize(Vector3.Cross(v2 - v0, v1 - v0));
+                Vector3 normal = Vector3.Cross(v2 - v0, v1 - v0);
 
                 normals[indices[i + 0]] += normal;
                 normals[indices[i + 1]] += normal;
                 normals[indices[i + 2]] += normal;
 
             }
+            vertexnormals = new Vector3[vertices.Length];
             for (int i = 0; i < vertices.Length; i ++)
             {
                 normals[i] = Vector3.Normalize(normals[i])*-1;
                 Console.WriteLine(normals[i]);
+                vertexnormals[i] = Vector3.Zero;
             }
-            
-          
+            for (int i = 0; i < indices.Length/3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    vertexnormals[indices[i + j]] += normals[indices[i + j]];
+                    vertexnormals[indices[i + j]] += normals[indices[i + j]];
+                    vertexnormals[indices[i + j]] += normals[indices[i + j]];
+                }
+            }
+            Console.WriteLine("Vertex Normals:");
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                vertexnormals[i] = Vector3.Normalize(vertexnormals[i]);
+                Console.WriteLine(vertexnormals[i]);
+            }
+
+            GL.Enable(EnableCap.Lighting);
+            GL.Enable(EnableCap.Light0);
+            GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
 
             GL.GenBuffers(1, out vertexID);
             GL.BindBuffer(BufferTarget.ArrayBuffer, vertexID);

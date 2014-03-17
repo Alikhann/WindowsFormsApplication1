@@ -59,7 +59,7 @@ namespace WindowsFormsApplication1
         int i_elements;
         int norm;
         int bufferSize;
-
+        int line_in;
         float a;
 
         public AliGL()
@@ -75,7 +75,7 @@ namespace WindowsFormsApplication1
             loaded = true;
 
             ResetCamera();
-
+            //Alikhan Nugmanov
             GL.Enable(EnableCap.DepthTest);
            
             GL.Enable(EnableCap.ColorMaterial);
@@ -119,7 +119,11 @@ namespace WindowsFormsApplication1
             normals = new Vector3[vertices.Length];
             vertexnormals = new Vector3[vertices.Length];
 
-
+            for(int i = 0; i < indices.Length; i += 3)
+            {
+                //Console.WriteLine(indices[i] + " " + indices[i + 1] + " " + indices[i + 2]);
+            }
+            
 
             for (int i = 0; i < vertices.Length; i++)
             {
@@ -130,7 +134,6 @@ namespace WindowsFormsApplication1
             for (int i = 0; i < indices.Length; i += 3)
             {
                // Console.WriteLine(indices[i] + " " + indices[i + 1] + " " + indices[i + 2]);
-
                 Vector3 v0 = ToVector3(vertices[indices[i + 0]]);
                 Vector3 v1 = ToVector3(vertices[indices[i + 1]]);
                 Vector3 v2 = ToVector3(vertices[indices[i + 2]]);
@@ -150,7 +153,7 @@ namespace WindowsFormsApplication1
                 vertexnormals[indices[i]] = Vector3.Normalize(vertexnormals[indices[i]] + normals[indices[i]]);
                 vertexnormals[indices[i + 1]] = Vector3.Normalize(vertexnormals[indices[i + 1]] + normals[indices[i + 1]]);
                 vertexnormals[indices[i + 2]] = Vector3.Normalize(vertexnormals[indices[i + 2]] + normals[indices[i + 2]]);
-                Console.WriteLine("i: {0} i+1: {1} i+2: {2}", vertexnormals[indices[i]], vertexnormals[indices[i+1]], vertexnormals[indices[i+2]]);
+                //Console.WriteLine("i: {0} i+1: {1} i+2: {2}", vertexnormals[indices[i]], vertexnormals[indices[i+1]], vertexnormals[indices[i+2]]);
            /*
                 Vector3 n = normals[indices[i]];
 
@@ -174,8 +177,9 @@ namespace WindowsFormsApplication1
             }
             for (int i = 0; i < vertices.Length; i++)
             {
-                normals[i] = vertexnormals[i];
+                //Console.WriteLine(vertices[i]);
             }
+
             GL.ClearColor(Color.Black);
             GL.PointSize(5f);
 
@@ -250,21 +254,20 @@ namespace WindowsFormsApplication1
                 GL.EnableClientState(ArrayCap.VertexArray);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
                 GL.VertexPointer(3, VertexPointerType.Double, 0, 0);
-                GL.PointSize(7f);
+                GL.PointSize(5f);
                 //GL.DrawArrays(PrimitiveType.Points, 0, vertices.Length);
-                
             }
 
             //------------Element Array Buffer-----------------
-
+            
             {
-                GL.Color3(Color.White);
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, i_elements);
-                //GL.DrawElements(PrimitiveType.LineStrip, elementCount, DrawElementsType.UnsignedInt, 0);
-                GL.LineWidth(3f);
                 GL.Enable(EnableCap.Lighting);
                 GL.Enable(EnableCap.Light0);
-                
+                //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                //GL.Color3(Color.White);
+                GL.LineWidth(0.5f);
+                //GL.DrawElements(PrimitiveType.Lines, elementCount, DrawElementsType.UnsignedInt, 0);
                 GL.Color3(Color.Gray);
                 GL.DrawElements(PrimitiveType.Triangles, elementCount, DrawElementsType.UnsignedInt, 0);
             }
@@ -272,11 +275,9 @@ namespace WindowsFormsApplication1
             //------------Normal Array Buffer------------------
             
             {
-                
                 GL.EnableClientState(ArrayCap.NormalArray);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, norm);
                 GL.NormalPointer(NormalPointerType.Float, Vector3.SizeInBytes, 0);
-                  
             }
 
             GL.DisableClientState(ArrayCap.VertexArray);
@@ -389,7 +390,7 @@ namespace WindowsFormsApplication1
         {
             g_targetPos[0] = 0;
             g_targetPos[1] = 10;
-            g_targetPos[2] = 10;
+            g_targetPos[2] = 20;
 
             g_cameraPos[0] = g_targetPos[0];
             g_cameraPos[1] = g_targetPos[1];
@@ -529,10 +530,6 @@ namespace WindowsFormsApplication1
             GL.Vertex3(0.0f, 0.0f, 0.0f);
             GL.Vertex3(0.0f, 0.0f, 20.0f);
             GL.End();
-            GL.Begin(PrimitiveType.Points);
-            GL.Vertex3(15, 15, 15);
-            GL.End();
-
             }
         }              
     }

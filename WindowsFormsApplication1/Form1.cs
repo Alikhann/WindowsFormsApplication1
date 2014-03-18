@@ -62,6 +62,14 @@ namespace WindowsFormsApplication1
         int line_in;
         float a;
 
+
+        Vector3d[] boxvertices;
+        uint[] boxindices;
+        int box_id;
+        int boxid;
+
+        double xmin, xmax, ymin, ymax, zmin, zmax;
+        
         public AliGL()
         {
             InitializeComponent();
@@ -175,10 +183,56 @@ namespace WindowsFormsApplication1
             {
                 vertexnormals[i] = Vector3.Normalize(vertexnormals[i]);
             }
+
+            #region *******box around the object*******
+
             for (int i = 0; i < vertices.Length; i++)
             {
-                //Console.WriteLine(vertices[i]);
+                if (vertices[i].X > xmax)
+                    xmax = vertices[i].X;
+                if (vertices[i].Y > ymax)
+                    ymax = vertices[i].Y;
+                if (vertices[i].Z > zmax)
+                    zmax = vertices[i].Z;
             }
+            
+            xmin = ymin = zmin = 1000;
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                if (vertices[i].X < xmin)
+                    xmin = vertices[i].X;
+                if (vertices[i].Y < ymin)
+                    ymin = vertices[i].Y;
+                if (vertices[i].Z < zmin)
+                    zmin = vertices[i].Z;
+            }   
+
+                Console.WriteLine("x: {0} y: {1} z: {2}", xmax, ymax, zmax);
+                Console.WriteLine("x: {0} y: {1} z: {2}", xmin, ymin, zmin);
+
+            boxvertices = new Vector3d[]
+            {
+                new Vector3d(xmin - 2, ymin - 2, zmax + 2),
+                new Vector3d(xmax + 2, ymin - 2, zmax + 2),
+                new Vector3d(xmax + 2, ymax + 2, zmax + 2),
+                new Vector3d(xmin - 2, ymax + 2, zmax + 2),
+                new Vector3d(xmax + 2, ymin - 2, zmin - 2),
+                new Vector3d(xmax + 2, ymax + 2, zmin - 2), 
+                new Vector3d(xmin - 2, ymax + 2, zmin - 2),
+                new Vector3d(xmin - 2, ymin - 2, zmin - 2)
+            };
+
+            boxindices = new uint[]
+            {
+                0, 1, 1, 2,
+                2, 3, 3, 0,
+                4, 5, 5, 6,
+                6, 7, 0, 7,
+                3, 6, 2, 5, 
+                1, 4, 4, 7
+            };
+            #endregion
 
             GL.ClearColor(Color.Black);
             GL.PointSize(5f);
@@ -221,29 +275,66 @@ namespace WindowsFormsApplication1
                 //clear the buffer Binding
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
             }
+            //------------------Box Array Buffer------------
+            {
+                GL.GenBuffers(1, out box_id);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, box_id);
+                GL.BufferData<Vector3d>(BufferTarget.ArrayBuffer, (IntPtr)(boxvertices.Length * Vector3d.SizeInBytes), boxvertices, BufferUsageHint.DynamicDraw);
+                GL.GetBufferParameter(BufferTarget.ArrayBuffer, BufferParameterName.BufferSize, out bufferSize);
+                if (boxvertices.Length * Vector3d.SizeInBytes != bufferSize)
+                    Console.WriteLine("Box Vertex array is not uploaded correctly!");
+
+                //clear the buffer Binding
+                GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+            }
+            //------------------Box Element Buffer----------------
+            {
+                GL.GenBuffers(1, out boxid);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, boxid);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(boxindices.Length * sizeof(uint)), boxindices, BufferUsageHint.DynamicDraw);
+                GL.GetBufferParameter(BufferTarget.ElementArrayBuffer, BufferParameterName.BufferSize, out bufferSize);
+                if (boxindices.Length * sizeof(uint) != bufferSize)
+                    Console.WriteLine("Box Element array is not uploaded correctly!");
+
+                //clear the buffer Binding
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
+            }
             elementCount = indices.Length;
         }
-        private void glControl1_Paint(object sender, PaintEventArgs e)
+        private void drawAxes()
         {
-            if (!loaded)
-                return;
 
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
-            GL.MatrixMode(MatrixMode.Modelview);
-            GL.LoadIdentity();
-            gluLookAt(g_cameraPos[0], g_cameraPos[1], g_cameraPos[2], g_targetPos[0], g_targetPos[1], g_targetPos[2], 0.0f, 1.0f, 0.0f);
-            GL.Rotate(g_pitch, 1.0f, 0.0f, 0.0f);
-            GL.Rotate(g_heading, 0.0f, 1.0f, 0.0f);
-            GL.Disable(EnableCap.Lighting);
-            drawAxes();
-            GL.Color3(Color.Purple);
-           
-            //Triangles tr = new Triangles();
-            //tr.draw();
-            //GL.Enable(EnableCap.Lighting);
-            draw();
-            glControl1.SwapBuffers();
+            GL.Color3(Color.Red);
+            GL.Begin(PrimitiveType.Lines);
+            GL.Vertex3(0.0f, 0.0f, 0.0f);
+            GL.Vertex3(20.0f, 0.0f, 0.0f);
+            GL.End();
+            GL.Color3(Color.Green);
+            GL.Begin(PrimitiveType.Lines);
+            GL.Vertex3(0.0f, 0.0f, 0.0f);
+            GL.Vertex3(0.0f, 20.0f, 0.0f);
+            GL.End();
+            GL.Color3(Color.Blue);
+            GL.Begin(PrimitiveType.Lines);
+            GL.Vertex3(0.0f, 0.0f, 0.0f);
+            GL.Vertex3(0.0f, 0.0f, 20.0f);
+            GL.End();
+            }
+        private void draw_lines()
+        {
+            for(int i = 0; i < indices.Length; i += 3)
+            {
+                var v0 = vertices[indices[i+0]];
+                var v1 = vertices[indices[i + 1]];
+                var v2 = vertices[indices[i + 2]];
+                GL.LineWidth(1.5f);
+                GL.Begin(PrimitiveType.LineLoop);
+                GL.Color3(Color.White);
+                GL.Vertex3(v0.X, v0.Y, v0.Z);
+                GL.Vertex3(v1.X, v1.Y, v1.Z);
+                GL.Vertex3(v2.X, v2.Y, v2.Z);
+                GL.End();
+            }
         }
         private void draw()
         {
@@ -282,6 +373,40 @@ namespace WindowsFormsApplication1
 
             GL.DisableClientState(ArrayCap.VertexArray);
             GL.DisableClientState(ArrayCap.NormalArray);
+        }
+        private void drawBox()
+        {
+            GL.Color3(Color.LightSkyBlue);
+            GL.EnableClientState(ArrayCap.VertexArray);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, box_id);
+            GL.VertexPointer(3, VertexPointerType.Double, 0, 0);
+
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, boxid);
+            GL.DrawElements(PrimitiveType.Lines, boxindices.Length, DrawElementsType.UnsignedInt, 0);
+        }
+        private void glControl1_Paint(object sender, PaintEventArgs e)
+        {
+            if (!loaded)
+                return;
+
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+            GL.MatrixMode(MatrixMode.Modelview);
+            GL.LoadIdentity();
+            gluLookAt(g_cameraPos[0], g_cameraPos[1], g_cameraPos[2], g_targetPos[0], g_targetPos[1], g_targetPos[2], 0.0f, 1.0f, 0.0f);
+            GL.Rotate(g_pitch, 1.0f, 0.0f, 0.0f);
+            GL.Rotate(g_heading, 0.0f, 1.0f, 0.0f);
+            GL.Disable(EnableCap.Lighting);
+            drawAxes();
+            GL.Color3(Color.Purple);
+           
+            //Triangles tr = new Triangles();
+            //tr.draw();
+            //GL.Enable(EnableCap.Lighting);
+            draw_lines();
+            drawBox();
+            draw();
+            glControl1.SwapBuffers();
         }
         private void glControl1_Resize(object sender, EventArgs e)
         {
@@ -512,24 +637,6 @@ namespace WindowsFormsApplication1
         private void glControl1_MouseWheelChanged(Object sender, MouseEventArgs e)
         {
         }
-        private void drawAxes()
-        {
 
-            GL.Color3(Color.Red);
-            GL.Begin(PrimitiveType.Lines);
-            GL.Vertex3(0.0f, 0.0f, 0.0f);
-            GL.Vertex3(20.0f, 0.0f, 0.0f);
-            GL.End();
-            GL.Color3(Color.Green);
-            GL.Begin(PrimitiveType.Lines);
-            GL.Vertex3(0.0f, 0.0f, 0.0f);
-            GL.Vertex3(0.0f, 20.0f, 0.0f);
-            GL.End();
-            GL.Color3(Color.Blue);
-            GL.Begin(PrimitiveType.Lines);
-            GL.Vertex3(0.0f, 0.0f, 0.0f);
-            GL.Vertex3(0.0f, 0.0f, 20.0f);
-            GL.End();
-            }
         }              
     }

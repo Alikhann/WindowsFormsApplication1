@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.glControl1 = new OpenTK.GLControl();
+            this.panel1 = new System.Windows.Forms.Panel();
             this.SuspendLayout();
             // 
             // glControl1
@@ -47,11 +48,20 @@
             this.glControl1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseUp);
             this.glControl1.Resize += new System.EventHandler(this.glControl1_Resize);
             // 
+            // panel1
+            // 
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Right;
+            this.panel1.Location = new System.Drawing.Point(1206, 0);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(200, 713);
+            this.panel1.TabIndex = 2;
+            // 
             // AliGL
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1406, 713);
+            this.Controls.Add(this.panel1);
             this.Controls.Add(this.glControl1);
             this.Name = "AliGL";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
@@ -65,6 +75,7 @@
         #endregion
 
         private OpenTK.GLControl glControl1;
+        private System.Windows.Forms.Panel panel1;
 
     }
 }

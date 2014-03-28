@@ -402,9 +402,9 @@ namespace WindowsFormsApplication1
             GL.Disable(EnableCap.Lighting);
             drawAxes();
             if (checkbox.Checked == true) draw_lines();
-            
+            if (checkBox1.Checked == true) drawBox();
             //draw_lines();
-            drawBox();
+            //drawBox();
             draw();
             glControl1.SwapBuffers();
         }

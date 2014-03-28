@@ -6,37 +6,15 @@ using System.IO;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System.Globalization;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace WindowsFormsApplication1
 {
     public partial class AliGL : Form
     {
+        #region ------declaring------
         bool loaded = false;
-        int cnt = 0;
-
-        static float CAMERA_FOVY = 45.0f;
-        static float CAMERA_ZFAR = 1000.0f;
-        static float CAMERA_ZNEAR = 0.1f;
-
-        static float MOUSE_ORBIT_SPEED = 0.30f;
-        static float MOUSE_DOLLY_SPEED = 0.02f;
-        static float MOUSE_TRACK_SPEED = 0.05f;
-
-        ECameraMode camera_mode = ECameraMode.CAMERA_NONE;
-
-        Point mouse_previous = new Point();
-        Point mouse_current = new Point();
-        bool isMouseDown = false;
-
-        float[] g_cameraPos = new float[3];
-        float[] g_targetPos = new float[3];
-        float g_heading;
-        float g_pitch;
-        float dx = 0.0f;
-        float dy = 0.0f;
+        bool isMouseDown;
 
         Vector3d[] vertices;
         uint[] indices;
@@ -52,8 +30,16 @@ namespace WindowsFormsApplication1
         List<Vector3d> listOfVertices = new List<Vector3d>();
         string fileName = "C:/input.txt";
         //-------------------end-----------------------
-        int elementCount = 0; //count of tri element to be drawn
 
+        int elementCount = 0; //count of tri element to be drawn
+        Camera cam;
+        Matrix4 cameramatrix;
+        public static float zfar, znear;
+        public static Matrix4 projection;
+
+        public static Matrix4 defaultMVP;
+        public static Matrix4 defaultModelview;
+        public static Matrix4 defaultNormal;
     
         int v_position;
         int i_elements;
@@ -69,11 +55,22 @@ namespace WindowsFormsApplication1
         int boxid;
 
         double xmin, xmax, ymin, ymax, zmin, zmax;
-        
+        Vector3 cent, dist;
+        #endregion
+
         public AliGL()
         {
             InitializeComponent();
+            cam = new Camera(glControl1.ClientRectangle.Width, glControl1.ClientRectangle.Height);
+            this.cameramatrix = cam.cameraMatrix;
+            cam.camch += cam_camch;
         }
+        void cam_camch(Matrix4 cameramatrix)
+        {
+            this.cameramatrix = cameramatrix;
+            defaultModelview = cameramatrix;
+        }
+        
         public static Vector3 ToVector3(Vector3d input)
         {
             return new Vector3((float)input.X, (float)input.Y, (float)input.Z);
@@ -81,8 +78,12 @@ namespace WindowsFormsApplication1
         private void glControl1_Load(object sender, EventArgs e)
         {
             loaded = true;
-
-            ResetCamera();
+            //ResetCamera();.
+            glControl1.MouseDown += new MouseEventHandler(glControl1_MouseDown);
+            glControl1.MouseMove += glControl1_MouseMove;
+            glControl1.MouseUp += glControl1_MouseUp;
+            glControl1.MouseWheel += glControl1_MouseWheelChanged;
+            
             //Alikhan Nugmanov
             GL.Enable(EnableCap.DepthTest);
            
@@ -99,6 +100,7 @@ namespace WindowsFormsApplication1
             GL.Light(LightName.Light0, LightParameter.SpotExponent, 0.0f);
             GL.LightModel(LightModelParameter.LightModelTwoSide, 0.5f);
 
+            #region reading from file
             number1 = Convert.ToInt32(File.ReadAllLines(@fileName).First());
             number2 = Convert.ToInt32(File.ReadAllLines(@fileName).Skip(number1 + 1).Take(1).First());
             String[] lines = File.ReadAllLines(@fileName);
@@ -126,18 +128,6 @@ namespace WindowsFormsApplication1
             indices = list.ToArray();
             normals = new Vector3[vertices.Length];
             vertexnormals = new Vector3[vertices.Length];
-
-            for(int i = 0; i < indices.Length; i += 3)
-            {
-                //Console.WriteLine(indices[i] + " " + indices[i + 1] + " " + indices[i + 2]);
-            }
-            
-
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                vertexnormals[i] = new Vector3(0,0,0);
-                //Console.WriteLine(normals[i]);
-            }
 
             for (int i = 0; i < indices.Length; i += 3)
             {
@@ -183,7 +173,7 @@ namespace WindowsFormsApplication1
             {
                 vertexnormals[i] = Vector3.Normalize(vertexnormals[i]);
             }
-
+            #endregion
             #region *******box around the object*******
 
             for (int i = 0; i < vertices.Length; i++)
@@ -214,15 +204,15 @@ namespace WindowsFormsApplication1
             boxvertices = new Vector3d[]
             {
                 new Vector3d(xmin - 2, ymin - 2, zmax + 2),
-                new Vector3d(xmax + 2, ymin - 2, zmax + 2),
+                new Vector3d(xmax + 2, ymin - 2, zmax + 2),//1
                 new Vector3d(xmax + 2, ymax + 2, zmax + 2),
                 new Vector3d(xmin - 2, ymax + 2, zmax + 2),
                 new Vector3d(xmax + 2, ymin - 2, zmin - 2),
                 new Vector3d(xmax + 2, ymax + 2, zmin - 2), 
-                new Vector3d(xmin - 2, ymax + 2, zmin - 2),
+                new Vector3d(xmin - 2, ymax + 2, zmin - 2),//6
                 new Vector3d(xmin - 2, ymin - 2, zmin - 2)
             };
-
+            
             boxindices = new uint[]
             {
                 0, 1, 1, 2,
@@ -233,10 +223,13 @@ namespace WindowsFormsApplication1
                 1, 4, 4, 7
             };
             #endregion
+            cent = ToVector3(Vector3d.Subtract(boxvertices[1], boxvertices[6]));
+            cent /= 2;
 
             GL.ClearColor(Color.Black);
             GL.PointSize(5f);
 
+            #region GenBuffers, BindBuffers, BufferData
             //----------------Vertex Array Buffer---------------------
             {
                 GL.GenBuffers(1, out v_position);
@@ -300,10 +293,21 @@ namespace WindowsFormsApplication1
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
             }
             elementCount = indices.Length;
+            #endregion
+            PosCam();
+        }
+        void PosCam()
+        {
+            var dx = cent.X;
+            var dy = cent.Y;
+            var dz = cent.Z;
+            Console.WriteLine(dx + " " + dy + " " + dz);
+            cam.SetPosition(new Vector3(dx, dy*-1, dz), 100f);
+            cam.PokeCamera();
         }
         private void drawAxes()
         {
-
+            GL.LineWidth(3f);
             GL.Color3(Color.Red);
             GL.Begin(PrimitiveType.Lines);
             GL.Vertex3(0.0f, 0.0f, 0.0f);
@@ -376,7 +380,8 @@ namespace WindowsFormsApplication1
         }
         private void drawBox()
         {
-            GL.Color3(Color.LightSkyBlue);
+            GL.LineWidth(1f);
+            GL.Color3(Color.Cyan);
             GL.EnableClientState(ArrayCap.VertexArray);
             GL.BindBuffer(BufferTarget.ArrayBuffer, box_id);
             GL.VertexPointer(3, VertexPointerType.Double, 0, 0);
@@ -392,17 +397,11 @@ namespace WindowsFormsApplication1
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.MatrixMode(MatrixMode.Modelview);
-            GL.LoadIdentity();
-            gluLookAt(g_cameraPos[0], g_cameraPos[1], g_cameraPos[2], g_targetPos[0], g_targetPos[1], g_targetPos[2], 0.0f, 1.0f, 0.0f);
-            GL.Rotate(g_pitch, 1.0f, 0.0f, 0.0f);
-            GL.Rotate(g_heading, 0.0f, 1.0f, 0.0f);
+            GL.LoadMatrix(ref cameramatrix);
+
             GL.Disable(EnableCap.Lighting);
             drawAxes();
-            GL.Color3(Color.Purple);
            
-            //Triangles tr = new Triangles();
-            //tr.draw();
-            //GL.Enable(EnableCap.Lighting);
             draw_lines();
             drawBox();
             draw();
@@ -411,123 +410,120 @@ namespace WindowsFormsApplication1
         private void glControl1_Resize(object sender, EventArgs e)
         {
             Console.WriteLine("Resize time: " + DateTime.Now);
+           
+            GL.Viewport(glControl1.ClientRectangle.X, glControl1.ClientRectangle.Y, glControl1.ClientRectangle.Width, glControl1.ClientRectangle.Height);
+            znear = 0.1f;
+            zfar = 256000;
+            projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, glControl1.ClientRectangle.Width / (float)glControl1.ClientRectangle.Height, znear, zfar);
+            GL.MatrixMode(MatrixMode.Projection);
+            GL.LoadMatrix(ref projection);
+            glControl1.Invalidate();
 
-            if (Width != 0 && Height != 0)
-            {
-                GL.Viewport(0, 0, Width, Height);
-
-                double aspectRatio = Width / (double)Height;
-
-                GL.MatrixMode(MatrixMode.Projection);
-                GL.LoadIdentity();
-
-                gluPerspective(CAMERA_FOVY, aspectRatio, CAMERA_ZNEAR, CAMERA_ZFAR);
-
-                glControl1.Invalidate();
-            }
         }
-        internal void gluPerspective(double fovy, double aspect, double zNear, double zFar)
-        {
-            /*
-            double xmin, xmax, ymin, ymax;
+        #region temp 2
+        //internal void gluPerspective(double fovy, double aspect, double zNear, double zFar)
+        //{
+        //    /*
+        //    double xmin, xmax, ymin, ymax;
 
-            ymax = zNear * Math.Tan(fovy * Math.PI / 360.0);
-            ymin = -ymax;
+        //    ymax = zNear * Math.Tan(fovy * Math.PI / 360.0);
+        //    ymin = -ymax;
 
-            xmin = ymin * aspect;
-            xmax = ymax * aspect;
+        //    xmin = ymin * aspect;
+        //    xmax = ymax * aspect;
 
-            GL.Frustum(xmin, xmax, ymin, ymax, zNear, zFar);//left, right, bottom, top
-             */
-            Matrix4d m = Matrix4d.Identity;
-            double sine, cotangent, deltaZ;
-            double radians = fovy / 2 * Math.PI / 180;
+        //    GL.Frustum(xmin, xmax, ymin, ymax, zNear, zFar);//left, right, bottom, top
+        //     */
+        //    Matrix4d m = Matrix4d.Identity;
+        //    double sine, cotangent, deltaZ;
+        //    double radians = fovy / 2 * Math.PI / 180;
 
-            deltaZ = zFar - zNear;
-            sine = Math.Sin(radians);
-            if ((deltaZ == 0) || (sine == 0) || (aspect == 0))
-            {
-                return;
-            }
-            //TODO: check why this cos was written COS?
-            cotangent = Math.Cos(radians) / sine;
+        //    deltaZ = zFar - zNear;
+        //    sine = Math.Sin(radians);
+        //    if ((deltaZ == 0) || (sine == 0) || (aspect == 0))
+        //    {
+        //        return;
+        //    }
+        //    //TODO: check why this cos was written COS?
+        //    cotangent = Math.Cos(radians) / sine;
 
-            m.M11 = cotangent / aspect;
-            m.M22 = cotangent;
-            m.M33 = -(zFar + zNear) / deltaZ;
-            m.M34 = -1;
-            m.M43 = -2 * zNear * zFar / deltaZ;
-            m.M44 = 0;
+        //    m.M11 = cotangent / aspect;
+        //    m.M22 = cotangent;
+        //    m.M33 = -(zFar + zNear) / deltaZ;
+        //    m.M34 = -1;
+        //    m.M43 = -2 * zNear * zFar / deltaZ;
+        //    m.M44 = 0;
 
-            GL.MultMatrix(ref m);
-        }
-        Vector3 forward = new Vector3();
-        Vector3 up = new Vector3();
-        Vector3 right = new Vector3();
-        void gluLookAt(float eyex, float eyey, float eyez, float centerx, float centery, float centerz, float upx, float upy, float upz)
-        {
-            //float[] m = new float[16];
-            Matrix4 m;
-            forward.X = centerx - eyex;
-            forward.Y = centery - eyey;
-            forward.Z = centerz - eyez;
+        //    GL.MultMatrix(ref m);
+        //}
+        //Vector3 forward = new Vector3();
+        //Vector3 up = new Vector3();
+        //Vector3 right = new Vector3();
+        //void gluLookAt(float eyex, float eyey, float eyez, float centerx, float centery, float centerz, float upx, float upy, float upz)
+        //{
+        //    //float[] m = new float[16];
+        //    Matrix4 m;
+        //    forward.X = centerx - eyex;
+        //    forward.Y = centery - eyey;
+        //    forward.Z = centerz - eyez;
+        //    up.X = upx;
+        //    up.Y = upy;
+        //    up.Z = upz;
 
-            up.X = upx;
-            up.Y = upy;
-            up.Z = upz;
+        //    forward.Normalize();
 
-            forward.Normalize();
+        //    /* Side = tForward x tUp */
+        //    Vector3.Cross(ref forward, ref up, out right);
 
-            /* Side = tForward x tUp */
-            Vector3.Cross(ref forward, ref up, out right);
+        //    right.Normalize();
 
-            right.Normalize();
+        //    /* Recompute tUp as: tUp = tRight x tForward */
+        //    Vector3.Cross(ref right, ref forward, out up);
+        //    /*
+        //    // set right vector
+        //    m[0] = right.X; m[1] = up.X; m[2] = -forward.X; m[3] = 0;
+        //    // set up vector
+        //    m[4] = right.Y; m[5] = up.Y; m[6] = -forward.Y; m[7] = 0;
+        //    // set forward vector
+        //    m[8] = right.Z; m[9] = up.Z; m[10] = -forward.Z; m[11] = 0;
+        //    // set translation vector
+        //    m[12] = 0; m[13] = 0; m[14] = 0; m[15] = 1;
+        //    *///sdsd
+        //    m = Matrix4.Identity;
+        //    m.M11 = right.X;
+        //    m.M21 = right.Y;
+        //    m.M31 = right.Z;
 
-            /* Recompute tUp as: tUp = tRight x tForward */
-            Vector3.Cross(ref right, ref forward, out up);
-            /*
-            // set right vector
-            m[0] = right.X; m[1] = up.X; m[2] = -forward.X; m[3] = 0;
-            // set up vector
-            m[4] = right.Y; m[5] = up.Y; m[6] = -forward.Y; m[7] = 0;
-            // set forward vector
-            m[8] = right.Z; m[9] = up.Z; m[10] = -forward.Z; m[11] = 0;
-            // set translation vector
-            m[12] = 0; m[13] = 0; m[14] = 0; m[15] = 1;
-            *///sdsd
-            m = Matrix4.Identity;
-            m.M11 = right.X;
-            m.M21 = right.Y;
-            m.M31 = right.Z;
+        //    m.M21 = up.X;
+        //    m.M22 = up.Y;
+        //    m.M23 = up.Z;
 
-            m.M21 = up.X;
-            m.M22 = up.Y;
-            m.M23 = up.Z;
-
-            m.M31 = -forward.X;
-            m.M32 = -forward.Y;
-            m.M33 = -forward.Z;
-            GL.MultMatrix(ref m);
+        //    m.M31 = -forward.X;
+        //    m.M32 = -forward.Y;
+        //    m.M33 = -forward.Z;
               
-            GL.Translate(-eyex, -eyey, -eyez);
-        }
-        void ResetCamera()
-        {
-            g_targetPos[0] = 0;
-            g_targetPos[1] = 10;
-            g_targetPos[2] = 20;
+        //    GL.MultMatrix(ref m);
+        //    GL.Translate(-eyex, -eyey, -eyez);
+        //}
+        //void ResetCamera()
+        //{
+            
+        //    g_targetPos[0] = 0;
+        //    g_targetPos[1] = 10;
+        //    g_targetPos[2] = 0;
 
-            g_cameraPos[0] = g_targetPos[0];
-            g_cameraPos[1] = g_targetPos[1];
-            g_cameraPos[2] = g_targetPos[2] + 100 + CAMERA_ZNEAR;
+        //    g_cameraPos[0] = g_targetPos[0];
+        //    g_cameraPos[1] = g_targetPos[1];
+        //    g_cameraPos[2] = g_targetPos[2] + 150 + CAMERA_ZNEAR;
 
-            g_pitch = 0.0f;
-            g_heading = 0.0f;
-        }
-        enum ECameraMode
-        {
-            CAMERA_NONE, CAMERA_TRACK, CAMERA_DOLLY, CAMERA_ORBIT
-        }
+        //    g_pitch = 0.0f;
+        //    g_heading = 0.0f;
+        //}
+        //enum ECameraMode
+        //{
+        //    CAMERA_NONE, CAMERA_TRACK, CAMERA_DOLLY, CAMERA_ORBIT
+        //}
+        #endregion
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
             Console.WriteLine("keydown");
@@ -536,18 +532,6 @@ namespace WindowsFormsApplication1
                 case Keys.Escape:
                     Close();
                     break;
-                case Keys.Left:
-                    g_heading += 90.0f;
-                    break;
-                case Keys.Right:
-                    g_heading += -90.0f;
-                    break;
-                case Keys.Up:
-                    g_pitch += 90.0f;
-                    break;
-                case Keys.Down:
-                    g_pitch += -90.0f;
-                    break;
             }
         }
         protected override bool ProcessDialogKey(Keys keyData)
@@ -555,88 +539,44 @@ namespace WindowsFormsApplication1
             OnKeyDown(new KeyEventArgs(keyData));
             return base.ProcessDialogKey(keyData);
         }
+        
         private void glControl1_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
         {
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+                cam.MouseDown(new System.Drawing.Point(e.X, e.Y), OpenTK.Input.MouseButton.Left);
+            if (e.Button == System.Windows.Forms.MouseButtons.Middle)
+                cam.MouseDown(new System.Drawing.Point(e.X, e.Y), OpenTK.Input.MouseButton.Middle);
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+                cam.MouseDown(new System.Drawing.Point(e.X, e.Y), OpenTK.Input.MouseButton.Right);
+            
             isMouseDown = true;
-            switch (e.Button)
-            {
-                case MouseButtons.Right:
-                    camera_mode = ECameraMode.CAMERA_TRACK;
-                    break;
-                case MouseButtons.Middle:
-                    camera_mode = ECameraMode.CAMERA_DOLLY;
-                    break;
-                case MouseButtons.Left:
-                    camera_mode = ECameraMode.CAMERA_ORBIT;
-                    break;
-            }
-
-            mouse_previous.X = MousePosition.X;
-            mouse_previous.Y = MousePosition.Y;
+           
         }
         private void glControl1_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
         {
-            camera_mode = ECameraMode.CAMERA_NONE;
-
+            cam.MouseUp();
+           
             isMouseDown = false;
+              
         }
+             
         private void glControl1_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
         {
-            mouse_current.X = MousePosition.X;
-            mouse_current.Y = MousePosition.Y;
+            cam.MouseMove(new System.Drawing.Point(e.X, e.Y));
             
-            switch (camera_mode)
-            {
-                case ECameraMode.CAMERA_TRACK:
-
-                    dx = mouse_current.X - mouse_previous.X;
-                    dx *= MOUSE_TRACK_SPEED;
-                    dy = mouse_current.Y - mouse_previous.Y;
-                    dy *= MOUSE_TRACK_SPEED;
-
-                    g_cameraPos[0] -= dx;
-                    g_cameraPos[1] += dy;
-
-                    g_targetPos[0] -= dx;
-                    g_targetPos[1] += dy;
-
-                    break;
-
-                case ECameraMode.CAMERA_DOLLY:
-                
-                    dy = mouse_current.Y - mouse_previous.Y;
-                    dy *= MOUSE_DOLLY_SPEED;
-
-                    g_cameraPos[2] += dy;
-                    
-                   // glControl1_MouseWheelChanged(sender, e);
-                    break;
-
-                case ECameraMode.CAMERA_ORBIT:
-
-                    dx = mouse_current.X - mouse_previous.X;
-                    dx += MOUSE_ORBIT_SPEED;
-
-                    dy = mouse_current.Y - mouse_previous.Y;
-                    dy += MOUSE_ORBIT_SPEED;
-
-                    g_heading += dx;
-                    g_pitch += dy;
-                    
-                    break;
-            }
-            mouse_previous.X = mouse_current.X;
-            mouse_previous.Y = mouse_current.Y;
-
             if (isMouseDown)
             {
                 glControl1.Refresh();
             }
+            
 
         }
         private void glControl1_MouseWheelChanged(Object sender, MouseEventArgs e)
         {
+            
+            cam.Mouse_WheelChanged(null, new OpenTK.Input.MouseWheelEventArgs(e.X, e.Y, 1, e.Delta / 100));
+            glControl1.Refresh();
         }
-
+        
         }              
     }

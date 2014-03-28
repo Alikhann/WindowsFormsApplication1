@@ -401,8 +401,9 @@ namespace WindowsFormsApplication1
 
             GL.Disable(EnableCap.Lighting);
             drawAxes();
-           
-            draw_lines();
+            if (checkbox.Checked == true) draw_lines();
+            
+            //draw_lines();
             drawBox();
             draw();
             glControl1.SwapBuffers();
@@ -577,6 +578,12 @@ namespace WindowsFormsApplication1
             cam.Mouse_WheelChanged(null, new OpenTK.Input.MouseWheelEventArgs(e.X, e.Y, 1, e.Delta / 100));
             glControl1.Refresh();
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            draw_lines();
+        }
+
         
         }              
     }

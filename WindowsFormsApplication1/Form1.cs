@@ -115,7 +115,7 @@ namespace WindowsFormsApplication1
                 double.TryParse(values[0], NumberStyles.Any, ci, out x);
                 double.TryParse(values[1], NumberStyles.Any, ci, out y);
                 double.TryParse(values[2], NumberStyles.Any, ci, out z); ;
-                listOfVertices.Add(new Vector3d(x, y, z));
+                listOfVertices.Add(new Vector3d(x, y, z*500));
             }
             for (int i = number1 + 2; i < lines.Length; i++)
             {

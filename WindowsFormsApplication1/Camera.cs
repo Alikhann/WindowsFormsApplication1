@@ -278,14 +278,6 @@ namespace WindowsFormsApplication1
             moving = false;
         }
 
-        public static void PrintMatrix(Matrix4 cameraMatrix)
-        {
-            Console.WriteLine("-------");
-            Console.WriteLine(cameraMatrix.Column0.X.ToString("000.0000") + "\t" + cameraMatrix.Column1.X.ToString("000.0000") + "\t" + cameraMatrix.Column2.X.ToString("000.0000") + "\t" + cameraMatrix.Column3.X.ToString("000.0000") + "\t");
-            Console.WriteLine(cameraMatrix.Column0.Y.ToString("000.0000") + "\t" + cameraMatrix.Column1.Y.ToString("000.0000") + "\t" + cameraMatrix.Column2.Y.ToString("000.0000") + "\t" + cameraMatrix.Column3.Y.ToString("000.0000") + "\t");
-            Console.WriteLine(cameraMatrix.Column0.Z.ToString("000.0000") + "\t" + cameraMatrix.Column1.Z.ToString("000.0000") + "\t" + cameraMatrix.Column2.Z.ToString("000.0000") + "\t" + cameraMatrix.Column3.Z.ToString("000.0000") + "\t");
-            Console.WriteLine(cameraMatrix.Column0.W.ToString("000.0000") + "\t" + cameraMatrix.Column1.W.ToString("000.0000") + "\t" + cameraMatrix.Column2.W.ToString("000.0000") + "\t" + cameraMatrix.Column3.W.ToString("000.0000") + "\t");
-        }
 
     }
 

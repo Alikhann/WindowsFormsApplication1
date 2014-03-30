@@ -28,11 +28,12 @@ namespace WindowsFormsApplication1
         int number1, number2;
         string[] values;
         List<Vector3d> listOfVertices = new List<Vector3d>();
-        string fileName = "C:/input.txt";
+        string fileName = "G:/test/input.txt";
         //-------------------end-----------------------
 
         int elementCount = 0; //count of tri element to be drawn
         Camera cam;
+        Axes axe = new Axes();
         Matrix4 cameramatrix;
         public static float zfar, znear;
         public static Matrix4 projection;
@@ -294,6 +295,7 @@ namespace WindowsFormsApplication1
             }
             elementCount = indices.Length;
             #endregion
+            axe.Prepare(cam);
             PosCam();
         }
         void PosCam()
@@ -394,6 +396,7 @@ namespace WindowsFormsApplication1
             if (!loaded)
                 return;
 
+            Console.WriteLine("Painted");   
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.MatrixMode(MatrixMode.Modelview);
@@ -401,11 +404,20 @@ namespace WindowsFormsApplication1
 
             GL.Disable(EnableCap.Lighting);
             drawAxes();
-            if (checkbox.Checked == true) draw_lines();
-            if (checkBox1.Checked == true) drawBox();
+            if (checkbox.Checked == true) 
+            { 
+                draw_lines(); 
+                Console.WriteLine("Lines Drawed!");
+            }
+            if (checkBox1.Checked == true)
+            { 
+                drawBox(); 
+                Console.WriteLine("BOx Drawed!");
+            }
             //draw_lines();
             //drawBox();
             draw();
+            axe.Render();
             glControl1.SwapBuffers();
         }
         private void glControl1_Resize(object sender, EventArgs e)

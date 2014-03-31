@@ -34,6 +34,7 @@ namespace WindowsFormsApplication1
         int elementCount = 0; //count of tri element to be drawn
         Camera cam;
         Matrix4 cameramatrix;
+        
         public static float zfar, znear;
         public static Matrix4 projection;
 
@@ -48,6 +49,9 @@ namespace WindowsFormsApplication1
         int line_in;
         float a;
 
+        Axes axe = new Axes();
+
+        float xxx;
 
         Vector3d[] boxvertices;
         uint[] boxindices;
@@ -115,7 +119,7 @@ namespace WindowsFormsApplication1
                 double.TryParse(values[0], NumberStyles.Any, ci, out x);
                 double.TryParse(values[1], NumberStyles.Any, ci, out y);
                 double.TryParse(values[2], NumberStyles.Any, ci, out z); ;
-                listOfVertices.Add(new Vector3d(x, y, z*500));
+                listOfVertices.Add(new Vector3d(x, y, z));
             }
             for (int i = number1 + 2; i < lines.Length; i++)
             {
@@ -295,6 +299,7 @@ namespace WindowsFormsApplication1
             elementCount = indices.Length;
             #endregion
             PosCam();
+           // axe.Prepare(cam);
         }
         void PosCam()
         {
@@ -304,6 +309,7 @@ namespace WindowsFormsApplication1
             Console.WriteLine(dx + " " + dy + " " + dz);
             cam.SetPosition(new Vector3(dx, dy*-1, dz), 100f);
             cam.PokeCamera();
+            
         }
         private void drawAxes()
         {
@@ -393,19 +399,24 @@ namespace WindowsFormsApplication1
         {
             if (!loaded)
                 return;
-
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref cameramatrix);
 
             GL.Disable(EnableCap.Lighting);
+
             drawAxes();
-            if (checkbox.Checked == true) draw_lines();
-            if (checkBox1.Checked == true) drawBox();
+
             //draw_lines();
             //drawBox();
+            //axe.Render();
+
+            if (checkBox1.Checked == true) 
+                drawBox();
+
             draw();
+
             glControl1.SwapBuffers();
         }
         private void glControl1_Resize(object sender, EventArgs e)
@@ -584,6 +595,26 @@ namespace WindowsFormsApplication1
             draw_lines();
         }
 
+        private void trackBar1_Scroll(object sender, EventArgs e)
+        {
+            //GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
+            //GL.BufferData(BufferTarget.ArrayBuffer, new IntPtr(vertices.Length * Vector3d.SizeInBytes), vertices, BufferUsageHint.StaticDraw);
+
+            var x = 1;
+            Vector3d[] vert = vertices;
+
+
+            //Console.WriteLine(trackBar1.Value.ToString());
+        }
+
+        private void checkbox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkbox.Checked == true) 
+            {
+                draw_lines();
+                Console.WriteLine("true");
+            }
+        }
         
         }              
     }

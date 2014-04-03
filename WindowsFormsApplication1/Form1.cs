@@ -29,7 +29,7 @@ namespace WindowsFormsApplication1
         int number1, number2;
         string[] values;
         List<Vector3d> listOfVertices = new List<Vector3d>();
-        string fileName = "C:/input.txt";
+        string fileName = "G:/test/input.txt";
         //-------------------end-----------------------
 
         int elementCount = 0; //count of tri element to be drawn
@@ -205,7 +205,7 @@ namespace WindowsFormsApplication1
 
                 Console.WriteLine("x: {0} y: {1} z: {2}", xmax, ymax, zmax);
                 Console.WriteLine("x: {0} y: {1} z: {2}", xmin, ymin, zmin);
-
+            /*
             boxvertices = new Vector3d[]
             {
                 new Vector3d(xmin - 2, ymin - 2, zmax + 2),
@@ -226,10 +226,10 @@ namespace WindowsFormsApplication1
                 6, 7, 0, 7,
                 3, 6, 2, 5, 
                 1, 4, 4, 7
-            };
+            };*/
             #endregion
-            cent = ToVector3(Vector3d.Subtract(boxvertices[1], boxvertices[6]));
-            cent /= 2;
+            //cent = ToVector3(Vector3d.Subtract(boxvertices[1], boxvertices[6]));
+            //cent /= 2;
 
             GL.ClearColor(Color.Black);
             GL.PointSize(5f);
@@ -275,7 +275,7 @@ namespace WindowsFormsApplication1
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
             }
             //------------------Box Array Buffer------------
-            {
+            /*{
                 GL.GenBuffers(1, out box_id);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, box_id);
                 GL.BufferData<Vector3d>(BufferTarget.ArrayBuffer, (IntPtr)(boxvertices.Length * Vector3d.SizeInBytes), boxvertices, BufferUsageHint.DynamicDraw);
@@ -297,10 +297,13 @@ namespace WindowsFormsApplication1
 
                 //clear the buffer Binding
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
-            }
+            }*/
             elementCount = indices.Length;
             #endregion
             PosCam();
+
+            vertices2 = new Vector3d[vertices.Length];
+            Array.Copy(vertices, vertices2, vertices.Length);
            // axe.Prepare(cam);
         }
         void PosCam()
@@ -336,9 +339,9 @@ namespace WindowsFormsApplication1
         {
             for(int i = 0; i < indices.Length; i += 3)
             {
-                var v0 = vertices[indices[i+0]];
-                var v1 = vertices[indices[i + 1]];
-                var v2 = vertices[indices[i + 2]];
+                var v0 = vertices2[indices[i+0]];
+                var v1 = vertices2[indices[i + 1]];
+                var v2 = vertices2[indices[i + 2]];
                 GL.LineWidth(1.5f);
                 GL.Begin(PrimitiveType.LineLoop);
                 GL.Color3(Color.White);
@@ -388,14 +391,81 @@ namespace WindowsFormsApplication1
         }
         private void drawBox()
         {
-            GL.LineWidth(1f);
-            GL.Color3(Color.Cyan);
-            GL.EnableClientState(ArrayCap.VertexArray);
+           
+            /*GL.EnableClientState(ArrayCap.VertexArray);
             GL.BindBuffer(BufferTarget.ArrayBuffer, box_id);
             GL.VertexPointer(3, VertexPointerType.Double, 0, 0);
 
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, boxid);
             GL.DrawElements(PrimitiveType.Lines, boxindices.Length, DrawElementsType.UnsignedInt, 0);
+            */
+            for (int i = 0; i < vertices2.Length; i++)
+            {
+                if (vertices2[i].X > xmax)
+                    xmax = vertices2[i].X;
+                if (vertices2[i].Y > ymax)
+                    ymax = vertices2[i].Y;
+                if (vertices2[i].Z > zmax)
+                    zmax = vertices2[i].Z;
+            }
+
+            xmin = ymin = zmin = 1000;
+
+            for (int i = 0; i < vertices2.Length; i++)
+            {
+                if (vertices2[i].X < xmin)
+                    xmin = vertices2[i].X;
+                if (vertices2[i].Y < ymin)
+                    ymin = vertices2[i].Y;
+                if (vertices2[i].Z < zmin)
+                    zmin = vertices2[i].Z;
+            }
+            /*
+            boxvertices = new Vector3d[]
+            {
+                new Vector3d(xmin - 2, ymin - 2, zmax + 2),
+                new Vector3d(xmax + 2, ymin - 2, zmax + 2),//1
+                new Vector3d(xmax + 2, ymax + 2, zmax + 2),
+                new Vector3d(xmin - 2, ymax + 2, zmax + 2),3
+                new Vector3d(xmax + 2, ymin - 2, zmin - 2),
+                new Vector3d(xmax + 2, ymax + 2, zmin - 2), 
+                new Vector3d(xmin - 2, ymax + 2, zmin - 2),//6
+                new Vector3d(xmin - 2, ymin - 2, zmin - 2)
+            };
+            
+            boxindices = new uint[]
+            {
+                0, 1, 1, 2,
+                2, 3, 3, 0,
+                4, 5, 5, 6,
+                6, 7, 0, 7,
+                3, 6, 2, 5, 
+                1, 4, 4, 7*/
+
+            GL.LineWidth(1f);
+            GL.Color3(Color.Cyan);
+            GL.Begin(PrimitiveType.Lines);
+            
+                GL.Vertex3(xmin - 2, ymin - 2, zmax + 2);
+                GL.Vertex3(xmax + 2, ymin - 2, zmax + 2);
+                GL.Vertex3(xmax + 2, ymin - 2, zmax + 2);
+                GL.Vertex3(xmax + 2, ymax + 2, zmax + 2);
+                GL.Vertex3(xmax + 2, ymax + 2, zmax + 2);
+                GL.Vertex3(xmin - 2, ymin - 2, zmax + 2);
+                GL.Vertex3(xmax + 2, ymin - 2, zmin - 2);
+                GL.Vertex3(xmax + 2, ymax + 2, zmin - 2);
+                GL.Vertex3(xmin - 2, ymax + 2, zmin - 2);
+                GL.Vertex3(xmin - 2, ymax + 2, zmin - 2);
+                GL.Vertex3(xmin - 2, ymin - 2, zmin - 2);
+                GL.Vertex3(xmin - 2, ymin - 2, zmax + 2);
+                GL.Vertex3(xmin - 2, ymin - 2, zmin - 2);
+                GL.Vertex3(xmin - 2, ymax + 2, zmax + 2);
+                GL.Vertex3(xmax + 2, ymax + 2, zmax + 2);
+                GL.Vertex3(xmax + 2, ymax + 2, zmin - 2);
+                GL.Vertex3(xmax + 2, ymin - 2, zmax + 2);
+                GL.Vertex3(xmax + 2, ymin - 2, zmin - 2);
+                GL.Vertex3(xmin - 2, ymin - 2, zmin - 2);
+             GL.End();
         }
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
@@ -608,7 +678,7 @@ namespace WindowsFormsApplication1
 
             vertices2 = new Vector3d[vertices.Length];
             Array.Copy(vertices, vertices2, vertices.Length);
-
+            s
             label3.Text = vertices2[1].Z.ToString();
 
             for(int i = 0; i < vertices2.Length; i++)

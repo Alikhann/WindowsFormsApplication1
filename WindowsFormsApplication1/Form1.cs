@@ -274,30 +274,6 @@ namespace WindowsFormsApplication1
                 //clear the buffer Binding
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
             }
-            //------------------Box Array Buffer------------
-            /*{
-                GL.GenBuffers(1, out box_id);
-                GL.BindBuffer(BufferTarget.ArrayBuffer, box_id);
-                GL.BufferData<Vector3d>(BufferTarget.ArrayBuffer, (IntPtr)(boxvertices.Length * Vector3d.SizeInBytes), boxvertices, BufferUsageHint.DynamicDraw);
-                GL.GetBufferParameter(BufferTarget.ArrayBuffer, BufferParameterName.BufferSize, out bufferSize);
-                if (boxvertices.Length * Vector3d.SizeInBytes != bufferSize)
-                    Console.WriteLine("Box Vertex array is not uploaded correctly!");
-
-                //clear the buffer Binding
-                GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-            }
-            //------------------Box Element Buffer----------------
-            {
-                GL.GenBuffers(1, out boxid);
-                GL.BindBuffer(BufferTarget.ElementArrayBuffer, boxid);
-                GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(boxindices.Length * sizeof(uint)), boxindices, BufferUsageHint.DynamicDraw);
-                GL.GetBufferParameter(BufferTarget.ElementArrayBuffer, BufferParameterName.BufferSize, out bufferSize);
-                if (boxindices.Length * sizeof(uint) != bufferSize)
-                    Console.WriteLine("Box Element array is not uploaded correctly!");
-
-                //clear the buffer Binding
-                GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
-            }*/
             elementCount = indices.Length;
             #endregion
             PosCam();
@@ -308,6 +284,8 @@ namespace WindowsFormsApplication1
         }
         void PosCam()
         {
+            cent = ToVector3(Vector3d.Subtract(new Vector3d(xmax + 2, ymin - 2, zmax + 2), new Vector3d(xmin - 2, ymax + 2, zmin - 2)));
+            cent /= 2;
             var dx = cent.X;
             var dy = cent.Y;
             var dz = cent.Z;
@@ -391,14 +369,7 @@ namespace WindowsFormsApplication1
         }
         private void drawBox()
         {
-           
-            /*GL.EnableClientState(ArrayCap.VertexArray);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, box_id);
-            GL.VertexPointer(3, VertexPointerType.Double, 0, 0);
-
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, boxid);
-            GL.DrawElements(PrimitiveType.Lines, boxindices.Length, DrawElementsType.UnsignedInt, 0);
-            */
+            xmax = ymax = zmax = 0;
             for (int i = 0; i < vertices2.Length; i++)
             {
                 if (vertices2[i].X > xmax)
@@ -409,7 +380,7 @@ namespace WindowsFormsApplication1
                     zmax = vertices2[i].Z;
             }
 
-            xmin = ymin = zmin = 1000;
+            xmin = ymin = zmin = 100000;
 
             for (int i = 0; i < vertices2.Length; i++)
             {
@@ -420,30 +391,9 @@ namespace WindowsFormsApplication1
                 if (vertices2[i].Z < zmin)
                     zmin = vertices2[i].Z;
             }
-            /*
-            boxvertices = new Vector3d[]
-            {
-                new Vector3d(xmin - 2, ymin - 2, zmax + 2),
-                new Vector3d(xmax + 2, ymin - 2, zmax + 2),//1
-                new Vector3d(xmax + 2, ymax + 2, zmax + 2),//2
-                new Vector3d(xmin - 2, ymax + 2, zmax + 2),//3
-                new Vector3d(xmax + 2, ymin - 2, zmin - 2),//4
-                new Vector3d(xmax + 2, ymax + 2, zmin - 2), //5
-                new Vector3d(xmin - 2, ymax + 2, zmin - 2),//6
-                new Vector3d(xmin - 2, ymin - 2, zmin - 2)
-            };
-            
-            boxindices = new uint[]
-            {
-                0, 1, 1, 2,
-                2, 3, 3, 0,
-                4, 5, 5, 6,
-                6, 7, 0, 7,
-                3, 6, 2, 5, 
-                1, 4, 4, 7*/
-
             GL.LineWidth(1f);
             GL.Color3(Color.Cyan);
+            #region draw using GL.BEGIN
             GL.Begin(PrimitiveType.Lines);
             
                 GL.Vertex3(xmin - 2, ymin - 2, zmax + 2);
@@ -470,8 +420,8 @@ namespace WindowsFormsApplication1
                 GL.Vertex3(xmax + 2, ymin - 2, zmin - 2);//1-4
                 GL.Vertex3(xmax + 2, ymin - 2, zmin - 2);
                 GL.Vertex3(xmin - 2, ymin - 2, zmin - 2);//4-7
-
-               GL.End();
+                GL.End();
+            #endregion
         }
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
@@ -691,7 +641,7 @@ namespace WindowsFormsApplication1
             {
                 vertices2[i].Z *= trackBar1.Value;
             }
-            label2.Text = vertices[1].Z.ToString();
+            label2.Text = vertices2[1].Z.ToString();
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
             GL.BufferData<Vector3d>(BufferTarget.ArrayBuffer, new IntPtr(vertices2.Length * Vector3d.SizeInBytes), vertices2, BufferUsageHint.DynamicDraw);

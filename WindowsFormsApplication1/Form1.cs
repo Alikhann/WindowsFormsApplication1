@@ -425,10 +425,10 @@ namespace WindowsFormsApplication1
             {
                 new Vector3d(xmin - 2, ymin - 2, zmax + 2),
                 new Vector3d(xmax + 2, ymin - 2, zmax + 2),//1
-                new Vector3d(xmax + 2, ymax + 2, zmax + 2),
-                new Vector3d(xmin - 2, ymax + 2, zmax + 2),3
-                new Vector3d(xmax + 2, ymin - 2, zmin - 2),
-                new Vector3d(xmax + 2, ymax + 2, zmin - 2), 
+                new Vector3d(xmax + 2, ymax + 2, zmax + 2),//2
+                new Vector3d(xmin - 2, ymax + 2, zmax + 2),//3
+                new Vector3d(xmax + 2, ymin - 2, zmin - 2),//4
+                new Vector3d(xmax + 2, ymax + 2, zmin - 2), //5
                 new Vector3d(xmin - 2, ymax + 2, zmin - 2),//6
                 new Vector3d(xmin - 2, ymin - 2, zmin - 2)
             };
@@ -447,25 +447,31 @@ namespace WindowsFormsApplication1
             GL.Begin(PrimitiveType.Lines);
             
                 GL.Vertex3(xmin - 2, ymin - 2, zmax + 2);
+                GL.Vertex3(xmax + 2, ymin - 2, zmax + 2);//0-1
                 GL.Vertex3(xmax + 2, ymin - 2, zmax + 2);
-                GL.Vertex3(xmax + 2, ymin - 2, zmax + 2);
+                GL.Vertex3(xmax + 2, ymax + 2, zmax + 2);//1-2
                 GL.Vertex3(xmax + 2, ymax + 2, zmax + 2);
-                GL.Vertex3(xmax + 2, ymax + 2, zmax + 2);
-                GL.Vertex3(xmin - 2, ymin - 2, zmax + 2);
-                GL.Vertex3(xmax + 2, ymin - 2, zmin - 2);
-                GL.Vertex3(xmax + 2, ymax + 2, zmin - 2);
-                GL.Vertex3(xmin - 2, ymax + 2, zmin - 2);
-                GL.Vertex3(xmin - 2, ymax + 2, zmin - 2);
-                GL.Vertex3(xmin - 2, ymin - 2, zmin - 2);
-                GL.Vertex3(xmin - 2, ymin - 2, zmax + 2);
-                GL.Vertex3(xmin - 2, ymin - 2, zmin - 2);
+                GL.Vertex3(xmin - 2, ymax + 2, zmax + 2);//2-3
                 GL.Vertex3(xmin - 2, ymax + 2, zmax + 2);
-                GL.Vertex3(xmax + 2, ymax + 2, zmax + 2);
-                GL.Vertex3(xmax + 2, ymax + 2, zmin - 2);
-                GL.Vertex3(xmax + 2, ymin - 2, zmax + 2);
+                GL.Vertex3(xmin - 2, ymin - 2, zmax + 2);//3-0
                 GL.Vertex3(xmax + 2, ymin - 2, zmin - 2);
-                GL.Vertex3(xmin - 2, ymin - 2, zmin - 2);
-             GL.End();
+                GL.Vertex3(xmax + 2, ymax + 2, zmin - 2);//4-5
+                GL.Vertex3(xmax + 2, ymax + 2, zmin - 2);
+                GL.Vertex3(xmin - 2, ymax + 2, zmin - 2);//5-6
+                GL.Vertex3(xmin - 2, ymax + 2, zmin - 2);
+                GL.Vertex3(xmin - 2, ymin - 2, zmin - 2);//6-7
+                GL.Vertex3(xmin - 2, ymin - 2, zmax + 2);
+                GL.Vertex3(xmin - 2, ymin - 2, zmin - 2);//0-7
+                GL.Vertex3(xmin - 2, ymax + 2, zmax + 2);
+                GL.Vertex3(xmin - 2, ymax + 2, zmin - 2);//3-6
+                GL.Vertex3(xmax + 2, ymax + 2, zmax + 2);
+                GL.Vertex3(xmax + 2, ymax + 2, zmin - 2);//2-5
+                GL.Vertex3(xmax + 2, ymin - 2, zmax + 2);
+                GL.Vertex3(xmax + 2, ymin - 2, zmin - 2);//1-4
+                GL.Vertex3(xmax + 2, ymin - 2, zmin - 2);
+                GL.Vertex3(xmin - 2, ymin - 2, zmin - 2);//4-7
+
+               GL.End();
         }
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
@@ -678,7 +684,7 @@ namespace WindowsFormsApplication1
 
             vertices2 = new Vector3d[vertices.Length];
             Array.Copy(vertices, vertices2, vertices.Length);
-            s
+            
             label3.Text = vertices2[1].Z.ToString();
 
             for(int i = 0; i < vertices2.Length; i++)

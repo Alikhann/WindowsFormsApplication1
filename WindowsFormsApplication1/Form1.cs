@@ -17,6 +17,7 @@ namespace WindowsFormsApplication1
         bool isMouseDown;
 
         Vector3d[] vertices;
+        Vector3d[] vertices2;
         uint[] indices;
         Vector3[] normals;
         Vector3[] vertexnormals;
@@ -61,7 +62,7 @@ namespace WindowsFormsApplication1
         double xmin, xmax, ymin, ymax, zmin, zmax;
         Vector3 cent, dist;
         #endregion
-
+        double[] temp = new double[] { 2.5, 3.5, 4.5, 5.5, 6.5 };
         public AliGL()
         {
             InitializeComponent();
@@ -233,12 +234,13 @@ namespace WindowsFormsApplication1
             GL.ClearColor(Color.Black);
             GL.PointSize(5f);
 
+
             #region GenBuffers, BindBuffers, BufferData
             //----------------Vertex Array Buffer---------------------
             {
                 GL.GenBuffers(1, out v_position);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
-                GL.BufferData<Vector3d>(BufferTarget.ArrayBuffer, (IntPtr)(vertices.Length * Vector3d.SizeInBytes), vertices, BufferUsageHint.DynamicDraw);
+                GL.BufferData<Vector3d>(BufferTarget.ArrayBuffer, (IntPtr)(vertices.Length * Vector3d.SizeInBytes), vertices, BufferUsageHint.StaticDraw);
                 GL.GetBufferParameter(BufferTarget.ArrayBuffer, BufferParameterName.BufferSize, out bufferSize);
                 if (vertices.Length * Vector3d.SizeInBytes != bufferSize)
                     Console.WriteLine("Vertex array is not uploaded correctly!");
@@ -411,7 +413,8 @@ namespace WindowsFormsApplication1
             //draw_lines();
             //drawBox();
             //axe.Render();
-
+            if (checkbox.Checked == true)
+                draw_lines();
             if (checkBox1.Checked == true) 
                 drawBox();
 
@@ -590,30 +593,34 @@ namespace WindowsFormsApplication1
             glControl1.Refresh();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void checkbox_CheckedChanged(object sender, EventArgs e)
         {
-            draw_lines();
+            glControl1_Paint(null, null);
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            glControl1_Paint(null, null);
         }
 
         private void trackBar1_Scroll(object sender, EventArgs e)
         {
-            //GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
-            //GL.BufferData(BufferTarget.ArrayBuffer, new IntPtr(vertices.Length * Vector3d.SizeInBytes), vertices, BufferUsageHint.StaticDraw);
 
-            var x = 1;
-            Vector3d[] vert = vertices;
+            vertices2 = new Vector3d[vertices.Length];
+            Array.Copy(vertices, vertices2, vertices.Length);
 
+            label3.Text = vertices2[1].Z.ToString();
 
-            //Console.WriteLine(trackBar1.Value.ToString());
-        }
-
-        private void checkbox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (checkbox.Checked == true) 
+            for(int i = 0; i < vertices2.Length; i++)
             {
-                draw_lines();
-                Console.WriteLine("true");
+                vertices2[i].Z *= trackBar1.Value;
             }
+            label2.Text = vertices[1].Z.ToString();
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
+            GL.BufferData<Vector3d>(BufferTarget.ArrayBuffer, new IntPtr(vertices2.Length * Vector3d.SizeInBytes), vertices2, BufferUsageHint.DynamicDraw);
+            glControl1_Paint(null, null);
+
         }
         
         }              

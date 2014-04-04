@@ -322,12 +322,20 @@ namespace WindowsFormsApplication1
                 var v0 = vertices2[indices[i+0]];
                 var v1 = vertices2[indices[i + 1]];
                 var v2 = vertices2[indices[i + 2]];
+                var vv0 = negativeVertices2[indices[i + 0]];
+                var vv1 = negativeVertices2[indices[i + 1]];
+                var vv2 = negativeVertices2[indices[i + 2]];
                 GL.LineWidth(1.5f);
                 GL.Begin(PrimitiveType.LineLoop);
                 GL.Color3(Color.White);
                 GL.Vertex3(v0.X, v0.Y, v0.Z);
                 GL.Vertex3(v1.X, v1.Y, v1.Z);
                 GL.Vertex3(v2.X, v2.Y, v2.Z);
+                GL.End();
+                GL.Begin(PrimitiveType.LineLoop);
+                GL.Vertex3(vv0.X, vv0.Y, vv0.Z);
+                GL.Vertex3(vv1.X, vv1.Y, vv1.Z);
+                GL.Vertex3(vv2.X, vv2.Y, vv2.Z);
                 GL.End();
             }
         }

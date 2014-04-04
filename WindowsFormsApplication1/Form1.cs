@@ -431,8 +431,8 @@ namespace WindowsFormsApplication1
                     xmin = vertices2[i].X;
                 if (vertices2[i].Y < ymin)
                     ymin = vertices2[i].Y;
-                if (vertices2[i].Z < zmin)
-                    zmin = vertices2[i].Z;
+                if (negativeVertices2[i].Z < zmin)
+                    zmin = negativeVertices2[i].Z;
             }
             GL.LineWidth(1f);
             GL.Color3(Color.Cyan);

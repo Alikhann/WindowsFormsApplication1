@@ -16,7 +16,7 @@ namespace WindowsFormsApplication1
         bool loaded = false;
         bool isMouseDown;
 
-        Vector3d[] vertices, vertices2, negativeVertices;
+        Vector3d[] vertices, vertices2, negativeVertices, negativeVertices2;
         uint[] indices;
         Vector3[] normals;
         Vector3[] vertexnormals;
@@ -157,18 +157,27 @@ namespace WindowsFormsApplication1
             {
                 vertexnormals[i] = Vector3.Normalize(vertexnormals[i]);
             }
+            negativeVertices = new Vector3d[vertices.Length];
+            Array.Copy(vertices, negativeVertices, vertices.Length);
+            for (int i = 0; i < vertices.Length; i ++)
+            {
+                negativeVertices[i].Z *= -1;
+            }
+            foreach (var v in negativeVertices)
+                Console.WriteLine(v);
             #endregion
+
             #region *******box around the object*******
 
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                if (vertices[i].X > xmax)
-                    xmax = vertices[i].X;
-                if (vertices[i].Y > ymax)
-                    ymax = vertices[i].Y;
-                if (vertices[i].Z > zmax)
-                    zmax = vertices[i].Z;
-            }
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    if (vertices[i].X > xmax)
+                        xmax = vertices[i].X;
+                    if (vertices[i].Y > ymax)
+                        ymax = vertices[i].Y;
+                    if (vertices[i].Z > zmax)
+                        zmax = vertices[i].Z;
+                }
             
             xmin = ymin = zmin = 1000;
 
@@ -227,6 +236,18 @@ namespace WindowsFormsApplication1
                 //clear the buffer Binding
                 GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             }
+            //----------------Negative Vertex Array Buffer---------------------
+            {
+                GL.GenBuffers(1, out v_position2);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, v_position2);
+                GL.BufferData<Vector3d>(BufferTarget.ArrayBuffer, (IntPtr)(negativeVertices.Length * Vector3d.SizeInBytes), negativeVertices, BufferUsageHint.StaticDraw);
+                GL.GetBufferParameter(BufferTarget.ArrayBuffer, BufferParameterName.BufferSize, out bufferSize);
+                if (negativeVertices.Length * Vector3d.SizeInBytes != bufferSize)
+                    Console.WriteLine("Vertex array is not uploaded correctly!");
+
+                //clear the buffer Binding
+                GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+            }
             
             //----------------Normal Array Buffer--------------------- 
             if (normals != null)
@@ -259,6 +280,8 @@ namespace WindowsFormsApplication1
 
             vertices2 = new Vector3d[vertices.Length];
             Array.Copy(vertices, vertices2, vertices.Length);
+            negativeVertices2 = new Vector3d[negativeVertices.Length];
+            Array.Copy(negativeVertices, negativeVertices2, negativeVertices.Length);
            // axe.Prepare(cam);
         }
         void PosCam()
@@ -337,6 +360,39 @@ namespace WindowsFormsApplication1
 
             //------------Normal Array Buffer------------------
             
+            {
+                GL.EnableClientState(ArrayCap.NormalArray);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, norm);
+                GL.NormalPointer(NormalPointerType.Float, Vector3.SizeInBytes, 0);
+            }
+
+            GL.DisableClientState(ArrayCap.VertexArray);
+            GL.DisableClientState(ArrayCap.NormalArray);
+
+            {
+                GL.EnableClientState(ArrayCap.VertexArray);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, v_position2);
+                GL.VertexPointer(3, VertexPointerType.Double, 0, 0);
+                GL.PointSize(5f);
+                //GL.DrawArrays(PrimitiveType.Points, 0, vertices.Length);
+            }
+
+            //------------Element Array Buffer-----------------
+
+            {
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, i_elements);
+                GL.Enable(EnableCap.Lighting);
+                GL.Enable(EnableCap.Light0);
+                //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                //GL.Color3(Color.White);
+                GL.LineWidth(0.5f);
+                //GL.DrawElements(PrimitiveType.Lines, elementCount, DrawElementsType.UnsignedInt, 0);
+                GL.Color3(Color.Gray);
+                GL.DrawElements(PrimitiveType.Triangles, elementCount, DrawElementsType.UnsignedInt, 0);
+            }
+
+            //------------Normal Array Buffer------------------
+
             {
                 GL.EnableClientState(ArrayCap.NormalArray);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, norm);
@@ -611,17 +667,22 @@ namespace WindowsFormsApplication1
         private void trackBar1_Scroll(object sender, EventArgs e)
         {
 
-            vertices2 = new Vector3d[vertices.Length];
             Array.Copy(vertices, vertices2, vertices.Length);
-            
+            Array.Copy(negativeVertices, negativeVertices2, negativeVertices.Length);
 
             for(int i = 0; i < vertices2.Length; i++)
             {
                 vertices2[i].Z *= trackBar1.Value;
+                negativeVertices2[i].Z *= trackBar1.Value;
             }
+
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
             GL.BufferData<Vector3d>(BufferTarget.ArrayBuffer, new IntPtr(vertices2.Length * Vector3d.SizeInBytes), vertices2, BufferUsageHint.DynamicDraw);
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, v_position2);
+            GL.BufferData<Vector3d>(BufferTarget.ArrayBuffer, new IntPtr(negativeVertices2.Length * Vector3d.SizeInBytes), negativeVertices2, BufferUsageHint.DynamicDraw);
+
             glControl1_Paint(null, null);
 
         }

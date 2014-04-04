@@ -16,8 +16,7 @@ namespace WindowsFormsApplication1
         bool loaded = false;
         bool isMouseDown;
 
-        Vector3d[] vertices;
-        Vector3d[] vertices2;
+        Vector3d[] vertices, vertices2, negativeVertices;
         uint[] indices;
         Vector3[] normals;
         Vector3[] vertexnormals;
@@ -29,7 +28,7 @@ namespace WindowsFormsApplication1
         int number1, number2;
         string[] values;
         List<Vector3d> listOfVertices = new List<Vector3d>();
-        string fileName = "G:/test/input.txt";
+        string fileName = "C:/input.txt";
         //-------------------end-----------------------
 
         int elementCount = 0; //count of tri element to be drawn
@@ -37,32 +36,12 @@ namespace WindowsFormsApplication1
         Matrix4 cameramatrix;
         
         public static float zfar, znear;
-        public static Matrix4 projection;
-
-        public static Matrix4 defaultMVP;
-        public static Matrix4 defaultModelview;
-        public static Matrix4 defaultNormal;
-    
-        int v_position;
-        int i_elements;
-        int norm;
-        int bufferSize;
-        int line_in;
-        float a;
-
-        Axes axe = new Axes();
-
-        float xxx;
-
-        Vector3d[] boxvertices;
-        uint[] boxindices;
-        int box_id;
-        int boxid;
-
+        public static Matrix4 projection, defaultModelview, defaultNormal, defaultMVP;
+        int v_position, v_position2, i_elements, norm, bufferSize;
+        
         double xmin, xmax, ymin, ymax, zmin, zmax;
-        Vector3 cent, dist;
+        Vector3 cent;
         #endregion
-        double[] temp = new double[] { 2.5, 3.5, 4.5, 5.5, 6.5 };
         public AliGL()
         {
             InitializeComponent();
@@ -635,13 +614,11 @@ namespace WindowsFormsApplication1
             vertices2 = new Vector3d[vertices.Length];
             Array.Copy(vertices, vertices2, vertices.Length);
             
-            label3.Text = vertices2[1].Z.ToString();
 
             for(int i = 0; i < vertices2.Length; i++)
             {
                 vertices2[i].Z *= trackBar1.Value;
             }
-            label2.Text = vertices2[1].Z.ToString();
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
             GL.BufferData<Vector3d>(BufferTarget.ArrayBuffer, new IntPtr(vertices2.Length * Vector3d.SizeInBytes), vertices2, BufferUsageHint.DynamicDraw);

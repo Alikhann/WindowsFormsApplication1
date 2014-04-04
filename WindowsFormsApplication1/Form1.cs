@@ -21,6 +21,7 @@ namespace WindowsFormsApplication1
         Vector3[] normals;
         Vector3[] vertexnormals;
         Dictionary<Vector3, Vector3> perPoint = new Dictionary<Vector3, Vector3>();
+        double[] distances;
  
         //---------------for reading file---------------
         
@@ -38,7 +39,8 @@ namespace WindowsFormsApplication1
         public static float zfar, znear;
         public static Matrix4 projection, defaultModelview, defaultNormal, defaultMVP;
         int v_position, v_position2, i_elements, norm, bufferSize;
-        
+
+        float[] light_position = new float[]{0.0f, 10.0f, 0.0f, 1.0f};
         double xmin, xmax, ymin, ymax, zmin, zmax;
         Vector3 cent;
         #endregion
@@ -49,7 +51,7 @@ namespace WindowsFormsApplication1
             this.cameramatrix = cam.cameraMatrix;
             cam.camch += cam_camch;
         }
-        void cam_camch(Matrix4 cameramatrix)
+        private void cam_camch(Matrix4 cameramatrix)
         {
             this.cameramatrix = cameramatrix;
             defaultModelview = cameramatrix;
@@ -75,13 +77,13 @@ namespace WindowsFormsApplication1
 
             GL.ShadeModel(ShadingModel.Flat);
 
-            GL.Enable(EnableCap.Lighting);
+            //GL.Enable(EnableCap.Lighting);
             GL.Enable(EnableCap.Light0);
-            GL.Light(LightName.Light0, LightParameter.Position, new float[] { 0.0f, 0.0f, 1.0f, 1.0f });
+            GL.Light(LightName.Light0, LightParameter.Position, light_position);
             //GL.Light(LightName.Light0, LightParameter.Ambient, new float[] { 0.5f, 0.5f, 0.5f });
-            //GL.Light(LightName.Light0, LightParameter.Specular, new float[] { 0.0f, 0.0f, 0.0f, 0.0f });
-            GL.Light(LightName.Light0, LightParameter.Diffuse, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-            GL.Light(LightName.Light0, LightParameter.SpotExponent, 0.0f);
+            GL.Light(LightName.Light0, LightParameter.Specular, new float[] { 1.0f, 1.0f, 1.0f, 0.0f });
+            //GL.Light(LightName.Light0, LightParameter.Diffuse, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
+            //GL.Light(LightName.Light0, LightParameter.SpotExponent, 0.0f);
             GL.LightModel(LightModelParameter.LightModelTwoSide, 0.5f);
 
             #region reading from file
@@ -163,8 +165,7 @@ namespace WindowsFormsApplication1
             {
                 negativeVertices[i].Z *= -1;
             }
-            foreach (var v in negativeVertices)
-                Console.WriteLine(v);
+
             #endregion
 
             #region *******box around the object*******
@@ -282,9 +283,10 @@ namespace WindowsFormsApplication1
             Array.Copy(vertices, vertices2, vertices.Length);
             negativeVertices2 = new Vector3d[negativeVertices.Length];
             Array.Copy(negativeVertices, negativeVertices2, negativeVertices.Length);
+            distances = new double[vertices.Length];
            // axe.Prepare(cam);
         }
-        void PosCam()
+        private void PosCam()
         {
             cent = ToVector3(Vector3d.Subtract(new Vector3d(xmax + 2, ymin - 2, zmax + 2), new Vector3d(xmin - 2, ymax + 2, zmin - 2)));
             cent /= 2;
@@ -295,6 +297,13 @@ namespace WindowsFormsApplication1
             cam.SetPosition(new Vector3(dx, dy*-1, dz), 100f);
             cam.PokeCamera();
             
+        }
+        private void findDistance()
+        {
+            for(int i = 0; i < vertices2.Length; i++)
+            {
+                distances[i] = Math.Sqrt(Math.Pow(vertices2[i].X, 2) + Math.Pow(vertices2[i].Y, 2) + Math.Pow(vertices2[i].Z, 2))*0;
+            }
         }
         private void drawAxes()
         {
@@ -470,11 +479,13 @@ namespace WindowsFormsApplication1
         {
             if (!loaded)
                 return;
+
+
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref cameramatrix);
-
+            GL.Enable(EnableCap.Lighting);
             GL.Disable(EnableCap.Lighting);
 
             drawAxes();
@@ -648,6 +659,7 @@ namespace WindowsFormsApplication1
         {
             cam.MouseMove(new System.Drawing.Point(e.X, e.Y));
             
+            Console.WriteLine(cam.Position);
             if (isMouseDown)
             {
                 glControl1.Refresh();
@@ -661,7 +673,7 @@ namespace WindowsFormsApplication1
             cam.Mouse_WheelChanged(null, new OpenTK.Input.MouseWheelEventArgs(e.X, e.Y, 1, e.Delta / 100));
             glControl1.Refresh();
         }
-
+        
         private void checkbox_CheckedChanged(object sender, EventArgs e)
         {
             glControl1_Paint(null, null);
@@ -674,16 +686,20 @@ namespace WindowsFormsApplication1
 
         private void trackBar1_Scroll(object sender, EventArgs e)
         {
-
             Array.Copy(vertices, vertices2, vertices.Length);
             Array.Copy(negativeVertices, negativeVertices2, negativeVertices.Length);
-
+            findDistance();
             for(int i = 0; i < vertices2.Length; i++)
             {
                 vertices2[i].Z *= trackBar1.Value;
                 negativeVertices2[i].Z *= trackBar1.Value;
             }
-
+            //Console.WriteLine(negativeVertices2[1].Z);
+            for(int i =0; i < vertices2.Length; i++)
+            {
+                negativeVertices2[i].Z += distances[i];
+            }
+           // Console.WriteLine(negativeVertices2[1].Z);
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
             GL.BufferData<Vector3d>(BufferTarget.ArrayBuffer, new IntPtr(vertices2.Length * Vector3d.SizeInBytes), vertices2, BufferUsageHint.DynamicDraw);

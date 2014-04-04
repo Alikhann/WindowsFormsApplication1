@@ -46,6 +46,10 @@ namespace WindowsFormsApplication1
         {
             get { return dir + eye; }
         }
+        public Vector3 Eye
+        {
+            get { return eye; }
+        }
 
         public Vector3 LookDirection
         {

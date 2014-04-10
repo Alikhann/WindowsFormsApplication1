@@ -40,9 +40,13 @@ namespace WindowsFormsApplication1
         public static Matrix4 projection, defaultModelview, defaultNormal, defaultMVP;
         int v_position, v_position2, i_elements, norm, bufferSize;
 
-        float[] light_position = new float[]{0.0f, 10.0f, 0.0f, 1.0f};
         double xmin, xmax, ymin, ymax, zmin, zmax;
         Vector3 cent;
+
+        //--------------------------------lighting 
+
+        //float[] light_position;
+        float[] light_position = { 0.0f, 0.0f, 1.0f, 1.0f };
         #endregion
         public AliGL()
         {
@@ -69,7 +73,11 @@ namespace WindowsFormsApplication1
             glControl1.MouseMove += glControl1_MouseMove;
             glControl1.MouseUp += glControl1_MouseUp;
             glControl1.MouseWheel += glControl1_MouseWheelChanged;
+
             
+            GL.ClearColor(Color.Black);
+            GL.PointSize(5f);
+
             //Alikhan Nugmanov
             GL.Enable(EnableCap.DepthTest);
            
@@ -77,14 +85,31 @@ namespace WindowsFormsApplication1
 
             GL.ShadeModel(ShadingModel.Flat);
 
+
+            float[] light_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
+            float[] light_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
+            float[] light_specular = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+            float[] spotdirection = { 0.0f, 0.0f, -1.0f };
+
             //GL.Enable(EnableCap.Lighting);
-            GL.Enable(EnableCap.Light0);
+            GL.Light(LightName.Light0, LightParameter.Ambient, light_ambient);
+            //GL.Light(LightName.Light0, LightParameter.Diffuse, light_diffuse);
+            GL.Light(LightName.Light0, LightParameter.Specular, light_specular);
             GL.Light(LightName.Light0, LightParameter.Position, light_position);
-            //GL.Light(LightName.Light0, LightParameter.Ambient, new float[] { 0.5f, 0.5f, 0.5f });
-            GL.Light(LightName.Light0, LightParameter.Specular, new float[] { 1.0f, 1.0f, 1.0f, 0.0f });
-            //GL.Light(LightName.Light0, LightParameter.Diffuse, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-            //GL.Light(LightName.Light0, LightParameter.SpotExponent, 0.0f);
-            GL.LightModel(LightModelParameter.LightModelTwoSide, 0.5f);
+           // GL.Light(LightName.Light0, LightParameter.Position, light_position);
+
+            GL.Light(LightName.Light0, LightParameter.ConstantAttenuation, 1.8f);
+            GL.Light(LightName.Light0, LightParameter.SpotCutoff, 45.0f);
+            GL.Light(LightName.Light0, LightParameter.SpotDirection, spotdirection);
+            GL.Light(LightName.Light0, LightParameter.SpotExponent, 1.0f);
+
+            //GL.Material(MaterialFace.FrontAndBack, MaterialParameter.Ambient, light_ambient);
+            GL.LightModel(LightModelParameter.LightModelLocalViewer, 1.0f);
+            GL.LightModel(LightModelParameter.LightModelTwoSide, 1.0f);
+            GL.Enable(EnableCap.Light0);
+            GL.Enable(EnableCap.Lighting);
+            //GL.LightModel(LightModelParameter.LightModelLocalViewer, );
 
             #region reading from file
             number1 = Convert.ToInt32(File.ReadAllLines(@fileName).First());
@@ -192,8 +217,8 @@ namespace WindowsFormsApplication1
                     zmin = vertices[i].Z;
             }   
 
-                Console.WriteLine("x: {0} y: {1} z: {2}", xmax, ymax, zmax);
-                Console.WriteLine("x: {0} y: {1} z: {2}", xmin, ymin, zmin);
+                //Console.WriteLine("x: {0} y: {1} z: {2}", xmax, ymax, zmax);
+                //Console.WriteLine("x: {0} y: {1} z: {2}", xmin, ymin, zmin);
             /*
             boxvertices = new Vector3d[]
             {
@@ -219,11 +244,6 @@ namespace WindowsFormsApplication1
             #endregion
             //cent = ToVector3(Vector3d.Subtract(boxvertices[1], boxvertices[6]));
             //cent /= 2;
-
-            GL.ClearColor(Color.Black);
-            GL.PointSize(5f);
-
-
             #region GenBuffers, BindBuffers, BufferData
             //----------------Vertex Array Buffer---------------------
             {
@@ -483,23 +503,27 @@ namespace WindowsFormsApplication1
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
+            
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref cameramatrix);
+            //Console.WriteLine(light_position[0]);
+            GL.Light(LightName.Light0, LightParameter.Position, light_position);
+            //GL.Enable(EnableCap.Lighting);
             GL.Enable(EnableCap.Lighting);
-            GL.Disable(EnableCap.Lighting);
-
-            drawAxes();
-
             //draw_lines();
             //drawBox();
             //axe.Render();
+            draw();
+            GL.Disable(EnableCap.Lighting);
+            GL.Begin(PrimitiveType.Points);
+            GL.Color3(Color.Yellow);
+            GL.Vertex3(0.0f, 0.0f, 10.0f);
+            GL.End();
+            drawAxes();
             if (checkbox.Checked == true)
                 draw_lines();
             if (checkBox1.Checked == true) 
                 drawBox();
-
-            draw();
-
             glControl1.SwapBuffers();
         }
         private void glControl1_Resize(object sender, EventArgs e)
@@ -512,6 +536,7 @@ namespace WindowsFormsApplication1
             projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, glControl1.ClientRectangle.Width / (float)glControl1.ClientRectangle.Height, znear, zfar);
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadMatrix(ref projection);
+
             glControl1.Invalidate();
 
         }
@@ -659,7 +684,9 @@ namespace WindowsFormsApplication1
         {
             cam.MouseMove(new System.Drawing.Point(e.X, e.Y));
             
-            Console.WriteLine(cam.Position);
+            //Console.WriteLine(cam.Position);
+            
+            //light_position[3] = 1.0f; // positional light
             if (isMouseDown)
             {
                 glControl1.Refresh();
@@ -710,6 +737,7 @@ namespace WindowsFormsApplication1
             glControl1_Paint(null, null);
 
         }
-        
-        }              
+
+
+    }              
     }

@@ -45,12 +45,13 @@ namespace WindowsFormsApplication1
 
         //--------------------------------lighting 
 
-        //float[] light_position;
-        float[] light_position = { 0.0f, 0.0f, 1.0f, 1.0f };
+        float[] light_position;
+       
         #endregion
         public AliGL()
         {
             InitializeComponent();
+
             cam = new Camera(glControl1.ClientRectangle.Width, glControl1.ClientRectangle.Height);
             this.cameramatrix = cam.cameraMatrix;
             cam.camch += cam_camch;
@@ -79,25 +80,22 @@ namespace WindowsFormsApplication1
             GL.PointSize(5f);
 
             //Alikhan Nugmanov
-            GL.Enable(EnableCap.DepthTest);
-           
-            GL.Enable(EnableCap.ColorMaterial);
-
-            GL.ShadeModel(ShadingModel.Flat);
 
 
-            float[] light_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
+            float[] light_ambient = { 0.6f, 0.6f, 0.6f, 1.0f };
             float[] light_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
             float[] light_specular = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+            light_position = new float[]{ 0.0f, 0.0f, 0.0f, 1.0f };
 
             float[] spotdirection = { 0.0f, 0.0f, -1.0f };
 
             //GL.Enable(EnableCap.Lighting);
             GL.Light(LightName.Light0, LightParameter.Ambient, light_ambient);
-            //GL.Light(LightName.Light0, LightParameter.Diffuse, light_diffuse);
+            GL.Light(LightName.Light0, LightParameter.Diffuse, light_diffuse);
             GL.Light(LightName.Light0, LightParameter.Specular, light_specular);
-            GL.Light(LightName.Light0, LightParameter.Position, light_position);
-           // GL.Light(LightName.Light0, LightParameter.Position, light_position);
+            //GL.Light(LightName.Light0, LightParameter.Position, new float[] { 0.0f, 0.0f, 0.0f, 1.0f });
+            GL.Light(LightName.Light0, LightParameter.Position, new float[] { 0.0f, 0.0f, 0.0f, 1.0f });
 
             GL.Light(LightName.Light0, LightParameter.ConstantAttenuation, 1.8f);
             GL.Light(LightName.Light0, LightParameter.SpotCutoff, 45.0f);
@@ -108,7 +106,10 @@ namespace WindowsFormsApplication1
             GL.LightModel(LightModelParameter.LightModelLocalViewer, 1.0f);
             GL.LightModel(LightModelParameter.LightModelTwoSide, 1.0f);
             GL.Enable(EnableCap.Light0);
-            GL.Enable(EnableCap.Lighting);
+            
+            GL.Enable(EnableCap.DepthTest);
+            GL.Enable(EnableCap.ColorMaterial);
+            GL.ShadeModel(ShadingModel.Flat);
             //GL.LightModel(LightModelParameter.LightModelLocalViewer, );
 
             #region reading from file
@@ -356,7 +357,7 @@ namespace WindowsFormsApplication1
                 var vv2 = negativeVertices2[indices[i + 2]];
                 GL.LineWidth(1.5f);
                 GL.Begin(PrimitiveType.LineLoop);
-                GL.Color3(Color.White);
+                GL.Color3(Color.DarkGray);
                 GL.Vertex3(v0.X, v0.Y, v0.Z);
                 GL.Vertex3(v1.X, v1.Y, v1.Z);
                 GL.Vertex3(v2.X, v2.Y, v2.Z);
@@ -370,14 +371,13 @@ namespace WindowsFormsApplication1
         }
         private void draw()
         {
-            
+            GL.Enable(EnableCap.Lighting);
             //-------------vertex array buffer-----------------  
             {
                 GL.Color3(Color.Red);
                 GL.EnableClientState(ArrayCap.VertexArray);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, v_position);
                 GL.VertexPointer(3, VertexPointerType.Double, 0, 0);
-                GL.PointSize(5f);
                 //GL.DrawArrays(PrimitiveType.Points, 0, vertices.Length);
             }
 
@@ -387,10 +387,6 @@ namespace WindowsFormsApplication1
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, i_elements);
                 GL.Enable(EnableCap.Lighting);
                 GL.Enable(EnableCap.Light0);
-                //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                //GL.Color3(Color.White);
-                GL.LineWidth(0.5f);
-                //GL.DrawElements(PrimitiveType.Lines, elementCount, DrawElementsType.UnsignedInt, 0);
                 GL.Color3(Color.Gray);
                 GL.DrawElements(PrimitiveType.Triangles, elementCount, DrawElementsType.UnsignedInt, 0);
             }
@@ -420,10 +416,6 @@ namespace WindowsFormsApplication1
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, i_elements);
                 GL.Enable(EnableCap.Lighting);
                 GL.Enable(EnableCap.Light0);
-                //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                //GL.Color3(Color.White);
-                GL.LineWidth(0.5f);
-                //GL.DrawElements(PrimitiveType.Lines, elementCount, DrawElementsType.UnsignedInt, 0);
                 GL.Color3(Color.Gray);
                 GL.DrawElements(PrimitiveType.Triangles, elementCount, DrawElementsType.UnsignedInt, 0);
             }
@@ -463,8 +455,8 @@ namespace WindowsFormsApplication1
                 if (negativeVertices2[i].Z < zmin)
                     zmin = negativeVertices2[i].Z;
             }
-            GL.LineWidth(1f);
             GL.Color3(Color.Cyan);
+            GL.LineWidth(1f);
             #region draw using GL.BEGIN
             GL.Begin(PrimitiveType.Lines);
             
@@ -497,45 +489,38 @@ namespace WindowsFormsApplication1
         }
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
+
             if (!loaded)
                 return;
 
-
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
-            
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref cameramatrix);
-            //Console.WriteLine(light_position[0]);
-            GL.Light(LightName.Light0, LightParameter.Position, light_position);
-            //GL.Enable(EnableCap.Lighting);
-            GL.Enable(EnableCap.Lighting);
+
             //draw_lines();
             //drawBox();
             //axe.Render();
-            draw();
             GL.Disable(EnableCap.Lighting);
-            GL.Begin(PrimitiveType.Points);
-            GL.Color3(Color.Yellow);
-            GL.Vertex3(0.0f, 0.0f, 10.0f);
-            GL.End();
             drawAxes();
             if (checkbox.Checked == true)
                 draw_lines();
             if (checkBox1.Checked == true) 
                 drawBox();
+            
+            draw();
             glControl1.SwapBuffers();
         }
         private void glControl1_Resize(object sender, EventArgs e)
         {
             Console.WriteLine("Resize time: " + DateTime.Now);
-           
+
             GL.Viewport(glControl1.ClientRectangle.X, glControl1.ClientRectangle.Y, glControl1.ClientRectangle.Width, glControl1.ClientRectangle.Height);
             znear = 0.1f;
             zfar = 256000;
             projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, glControl1.ClientRectangle.Width / (float)glControl1.ClientRectangle.Height, znear, zfar);
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadMatrix(ref projection);
+
 
             glControl1.Invalidate();
 

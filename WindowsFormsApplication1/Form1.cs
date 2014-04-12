@@ -305,6 +305,7 @@ namespace WindowsFormsApplication1
             negativeVertices2 = new Vector3d[negativeVertices.Length];
             Array.Copy(negativeVertices, negativeVertices2, negativeVertices.Length);
             distances = new double[vertices.Length];
+            checkBox2.Checked = true;
            // axe.Prepare(cam);
         }
         private void PosCam()
@@ -506,7 +507,7 @@ namespace WindowsFormsApplication1
                 draw_lines();
             if (checkBox1.Checked == true) 
                 drawBox();
-            if(checkBox2.Checked ==true)
+            if(checkBox2.Checked == true)
                 draw();
             glControl1.SwapBuffers();
         }

@@ -506,8 +506,8 @@ namespace WindowsFormsApplication1
                 draw_lines();
             if (checkBox1.Checked == true) 
                 drawBox();
-            
-            draw();
+            if(checkBox2.Checked ==true)
+                draw();
             glControl1.SwapBuffers();
         }
         private void glControl1_Resize(object sender, EventArgs e)
@@ -721,6 +721,11 @@ namespace WindowsFormsApplication1
 
             glControl1_Paint(null, null);
 
+        }
+
+        private void checkBox2_CheckedChanged(object sender, EventArgs e)
+        {
+            glControl1_Paint(null, null);
         }
 
 

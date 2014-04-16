@@ -7,6 +7,7 @@ using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System.Globalization;
 using System.Linq;
+using System.Drawing.Drawing2D;
 
 namespace WindowsFormsApplication1
 {
@@ -306,6 +307,18 @@ namespace WindowsFormsApplication1
             Array.Copy(negativeVertices, negativeVertices2, negativeVertices.Length);
             distances = new double[vertices.Length];
             checkBox2.Checked = true;
+
+            Bitmap bitmap = new Bitmap(195, 47);
+            Graphics gr = Graphics.FromImage(bitmap);
+            LinearGradientBrush brush = new LinearGradientBrush(
+                new Rectangle(0, 0, 195, 47),
+                Color.Blue,
+                Color.Red,
+                LinearGradientMode.Horizontal);
+            brush.SetSigmaBellShape(1f);
+            gr.FillRectangle(brush, new Rectangle(0, 0, 195, 47));
+            pictureBox1.Image = bitmap;
+
            // axe.Prepare(cam);
         }
         private void PosCam()
@@ -727,6 +740,13 @@ namespace WindowsFormsApplication1
         private void checkBox2_CheckedChanged(object sender, EventArgs e)
         {
             glControl1_Paint(null, null);
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Bitmap b = new Bitmap(pictureBox1.Image);
+            Color color = b.GetPixel(Convert.ToInt32(textBox1.Text), 1);
+            pictureBox2.BackColor = color;
         }
 
 

@@ -308,15 +308,15 @@ namespace WindowsFormsApplication1
             distances = new double[vertices.Length];
             checkBox2.Checked = true;
 
-            Bitmap bitmap = new Bitmap(195, 47);
+            Bitmap bitmap = new Bitmap(195, 33);
             Graphics gr = Graphics.FromImage(bitmap);
             LinearGradientBrush brush = new LinearGradientBrush(
-                new Rectangle(0, 0, 195, 47),
+                new Rectangle(0, 0, 195, 33),
                 Color.Blue,
                 Color.Red,
                 LinearGradientMode.Horizontal);
             brush.SetSigmaBellShape(1f);
-            gr.FillRectangle(brush, new Rectangle(0, 0, 195, 47));
+            gr.FillRectangle(brush, new Rectangle(0, 0, 195, 33));
             pictureBox1.Image = bitmap;
 
            // axe.Prepare(cam);

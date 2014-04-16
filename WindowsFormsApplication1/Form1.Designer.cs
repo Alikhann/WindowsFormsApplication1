@@ -313,12 +313,13 @@
             this.button2.TabIndex = 13;
             this.button2.Text = "button2";
             this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // pictureBox4
             // 
             this.pictureBox4.Location = new System.Drawing.Point(6, 50);
             this.pictureBox4.Name = "pictureBox4";
-            this.pictureBox4.Size = new System.Drawing.Size(160, 30);
+            this.pictureBox4.Size = new System.Drawing.Size(180, 30);
             this.pictureBox4.TabIndex = 9;
             this.pictureBox4.TabStop = false;
             // 

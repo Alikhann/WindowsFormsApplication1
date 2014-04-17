@@ -30,7 +30,7 @@ namespace WindowsFormsApplication1
         int number1, number2;
         string[] values;
         List<Vector3d> listOfVertices = new List<Vector3d>();
-        string fileName = "G:/test/input.txt";
+        string fileName = "C:/input.txt";
         //-------------------end-----------------------
 
         int elementCount = 0; //count of tri element to be drawn
@@ -52,6 +52,7 @@ namespace WindowsFormsApplication1
 
         Bitmap b = new Bitmap(180, 30);
         int deltaR, deltaG, deltaB;
+
         public AliGL()
         {
             InitializeComponent();
@@ -311,21 +312,12 @@ namespace WindowsFormsApplication1
             distances = new double[vertices.Length];
             checkBox2.Checked = true;
 
-            Bitmap bitmap = new Bitmap(195, 33);
-            Graphics gr = Graphics.FromImage(bitmap);
-            LinearGradientBrush brush = new LinearGradientBrush(
-                new Rectangle(0, 0, 195, 33),
-                Color.Yellow,
-                Color.Green,
-                LinearGradientMode.Horizontal);
-            brush.SetSigmaBellShape(1f);
-            gr.FillRectangle(brush, new Rectangle(0, 0, 195, 33));
-            pictureBox1.Image = bitmap;
-
             fillColor(Color.Blue, Color.Green, 1, 60);
             fillColor(Color.Green, Color.Yellow, 60, 120);
             fillColor(Color.Yellow, Color.Red, 120, 180);
 
+            Interpolation iii = new Interpolation();
+            Console.WriteLine(iii.findArea(21, 15, 37, 30, 54, 14));
            // axe.Prepare(cam);
         }
         // c1 c2  ; c1 - r,g,b   c2   - r,g,b
@@ -360,6 +352,7 @@ namespace WindowsFormsApplication1
             }
             pictureBox4.Image = b;
         }
+       
         private void PosCam()
         {
             cent = ToVector3(Vector3d.Subtract(new Vector3d(xmax + 2, ymin - 2, zmax + 2), new Vector3d(xmin - 2, ymax + 2, zmin - 2)));
@@ -779,14 +772,6 @@ namespace WindowsFormsApplication1
         private void checkBox2_CheckedChanged(object sender, EventArgs e)
         {
             glControl1_Paint(null, null);
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            Bitmap b = new Bitmap(pictureBox1.Image);
-            Color color = b.GetPixel(Convert.ToInt32(textBox1.Text), 1);
-            
-            pictureBox2.BackColor = color;
         }
 
         private void button2_Click(object sender, EventArgs e)

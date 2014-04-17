@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="Axes.cs" />
     <Compile Include="Camera.cs" />
+    <Compile Include="Interpolation.cs" />
     <Compile Include="Reading.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>

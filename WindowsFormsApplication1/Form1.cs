@@ -30,7 +30,7 @@ namespace WindowsFormsApplication1
         int number1, number2;
         string[] values;
         List<Vector3d> listOfVertices = new List<Vector3d>();
-        string fileName = "C:/input.txt";
+        string fileName = "G:/test/input.txt";
         //-------------------end-----------------------
 
         int elementCount = 0; //count of tri element to be drawn
@@ -49,6 +49,9 @@ namespace WindowsFormsApplication1
         float[] light_position;
        
         #endregion
+
+        Bitmap b = new Bitmap(180, 30);
+        int deltaR, deltaG, deltaB;
         public AliGL()
         {
             InitializeComponent();
@@ -87,7 +90,7 @@ namespace WindowsFormsApplication1
             float[] light_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
             float[] light_specular = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-            light_position = new float[]{ 0.0f, 0.0f, 0.0f, 1.0f };
+            //light_position = new float[]{ 0.0f, 0.0f, 0.0f, 1.0f };
 
             float[] spotdirection = { 0.0f, 0.0f, -1.0f };
 
@@ -98,7 +101,7 @@ namespace WindowsFormsApplication1
             //GL.Light(LightName.Light0, LightParameter.Position, new float[] { 0.0f, 0.0f, 0.0f, 1.0f });
             GL.Light(LightName.Light0, LightParameter.Position, new float[] { 0.0f, 0.0f, 0.0f, 1.0f });
 
-            GL.Light(LightName.Light0, LightParameter.ConstantAttenuation, 1.8f);
+            GL.Light(LightName.Light0, LightParameter.ConstantAttenuation, 1.3f);
             GL.Light(LightName.Light0, LightParameter.SpotCutoff, 45.0f);
             GL.Light(LightName.Light0, LightParameter.SpotDirection, spotdirection);
             GL.Light(LightName.Light0, LightParameter.SpotExponent, 1.0f);
@@ -312,14 +315,50 @@ namespace WindowsFormsApplication1
             Graphics gr = Graphics.FromImage(bitmap);
             LinearGradientBrush brush = new LinearGradientBrush(
                 new Rectangle(0, 0, 195, 33),
-                Color.Blue,
-                Color.Red,
+                Color.Yellow,
+                Color.Green,
                 LinearGradientMode.Horizontal);
             brush.SetSigmaBellShape(1f);
             gr.FillRectangle(brush, new Rectangle(0, 0, 195, 33));
             pictureBox1.Image = bitmap;
 
+            fillColor(Color.Blue, Color.Green, 1, 60);
+            fillColor(Color.Green, Color.Yellow, 60, 120);
+            fillColor(Color.Yellow, Color.Red, 120, 180);
+
            // axe.Prepare(cam);
+        }
+        // c1 c2  ; c1 - r,g,b   c2   - r,g,b
+        // for.. (c1.r-c2.r)/n-1
+            // r_new, g_new, b_new
+            // Color c = Color.FrmArgb(r_new, g_new, b_new);
+            //bm.setPixel(i, 2, c);
+         //
+        private void fillColor(Color c1, Color c2, int start, int end) 
+        {
+            
+            int newR=0, newG=0, newB=0;
+            int curR = c1.R;
+            int curG = c1.G;
+            int curB = c1.B;
+
+            deltaR = Convert.ToInt32((c2.R - c1.R) / (end - start - 1));
+            deltaG = Convert.ToInt32((c2.G - c1.G) / (end - start - 1));
+            deltaB = Convert.ToInt32((c2.B - c1.B) / (end - start - 1));
+            //Console.WriteLine("RED: {0} GREEN: {1} Blue: {2}", deltaR, deltaG, deltaB);
+            
+            for(int i = start; i < end; i++)
+            {
+                newR = curR + deltaR;
+                newG = curG + deltaG;
+                newB = curB + deltaB;
+                //Console.WriteLine("RED: {0} GREEN: {1} Blue: {2}", newR, newG, newB);
+                Color color = Color.FromArgb(newR, newG, newB);
+                for (int j = 0; j < 30; j++)
+                    b.SetPixel(i, j, color);
+                curR = newR; curG = newG; curB = newB;
+            }
+            pictureBox4.Image = b;
         }
         private void PosCam()
         {
@@ -746,7 +785,16 @@ namespace WindowsFormsApplication1
         {
             Bitmap b = new Bitmap(pictureBox1.Image);
             Color color = b.GetPixel(Convert.ToInt32(textBox1.Text), 1);
+            
             pictureBox2.BackColor = color;
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            Bitmap b = new Bitmap(pictureBox4.Image);
+            Color color = b.GetPixel(Convert.ToInt32(textBox2.Text), 1);
+
+            pictureBox3.BackColor = color;
         }
 
 

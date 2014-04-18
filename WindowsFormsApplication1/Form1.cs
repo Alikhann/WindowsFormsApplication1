@@ -91,7 +91,7 @@ namespace WindowsFormsApplication1
             float[] light_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
             float[] light_specular = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-            //light_position = new float[]{ 0.0f, 0.0f, 0.0f, 1.0f };
+            light_position = new float[]{ 0.0f, 0.0f, 0.0f, 1.0f };
 
             float[] spotdirection = { 0.0f, 0.0f, -1.0f };
 
@@ -100,8 +100,9 @@ namespace WindowsFormsApplication1
             GL.Light(LightName.Light0, LightParameter.Diffuse, light_diffuse);
             GL.Light(LightName.Light0, LightParameter.Specular, light_specular);
             //GL.Light(LightName.Light0, LightParameter.Position, new float[] { 0.0f, 0.0f, 0.0f, 1.0f });
-            GL.Light(LightName.Light0, LightParameter.Position, new float[] { 0.0f, 0.0f, 0.0f, 1.0f });
+            
 
+             GL.Light(LightName.Light0, LightParameter.Position, light_position);
             GL.Light(LightName.Light0, LightParameter.ConstantAttenuation, 1.3f);
             GL.Light(LightName.Light0, LightParameter.SpotCutoff, 45.0f);
             GL.Light(LightName.Light0, LightParameter.SpotDirection, spotdirection);
@@ -317,7 +318,9 @@ namespace WindowsFormsApplication1
             fillColor(Color.Yellow, Color.Red, 120, 180);
 
             Interpolation iii = new Interpolation();
-            Console.WriteLine(iii.findArea(21, 15, 37, 30, 54, 14));
+            double[,] a = new double[3,3];
+            
+            Console.WriteLine(iii.DET(3));
            // axe.Prepare(cam);
         }
         // c1 c2  ; c1 - r,g,b   c2   - r,g,b
@@ -538,11 +541,9 @@ namespace WindowsFormsApplication1
 
             if (!loaded)
                 return;
-
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref cameramatrix);
-
             //draw_lines();
             //drawBox();
             //axe.Render();

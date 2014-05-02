@@ -30,7 +30,7 @@ namespace WindowsFormsApplication1
         int number1, number2;
         string[] values;
         List<Vector3d> listOfVertices = new List<Vector3d>();
-        string fileName = "C:/input.txt";
+        string fileName = "G:/test/input.txt";
         //-------------------end-----------------------
 
         int elementCount = 0; //count of tri element to be drawn
@@ -318,9 +318,7 @@ namespace WindowsFormsApplication1
             fillColor(Color.Yellow, Color.Red, 120, 180);
 
             Interpolation iii = new Interpolation();
-            double[,] a = new double[3,3];
             
-            Console.WriteLine(iii.DET(3));
            // axe.Prepare(cam);
         }
         // c1 c2  ; c1 - r,g,b   c2   - r,g,b
